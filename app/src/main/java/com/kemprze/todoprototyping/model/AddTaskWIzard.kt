@@ -43,6 +43,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -78,6 +79,7 @@ fun AddTaskWizard(
     var reminderOffset by rememberSaveable {
         mutableStateOf<ReminderOffset?>(null) }
     val scope = rememberCoroutineScope()
+    var isSubmitting by remember { mutableStateOf(false) }
 
     Scaffold(modifier) { innerPadding ->
         Column(
@@ -169,28 +171,32 @@ fun AddTaskWizard(
                             pagerState.animateScrollToPage(pagerState.currentPage + 1)
                         }
                     } else {
-                        val newTask = simpleTask(
-                            taskName = taskName,
-                            taskDescription = taskDescription,
-                            priority = priority,
-                            category = category,
-                            dueDate = dueDate?.let {
-                                Instant.ofEpochMilli(it)
-                                    .atZone(ZoneId.systemDefault())
-                                    .toLocalDateTime()
-                            },
-                            needsReminder = needsReminder,
-                            remindMe = dueDate?.let { millis ->
-                                val due = Instant.ofEpochMilli(millis)
-                                    .atZone(ZoneId.systemDefault())
-                                    .toLocalDateTime()
-                                reminderOffset?.calculateReminderTime(due)
-                            },
-                            duration = Duration.fromMinutes(duration)
-                        )
-                        onAddClick(newTask)
+                        if (!isSubmitting) {
+                            val newTask = simpleTask(
+                                taskName = taskName,
+                                taskDescription = taskDescription,
+                                priority = priority,
+                                category = category,
+                                dueDate = dueDate?.let {
+                                    Instant.ofEpochMilli(it)
+                                        .atZone(ZoneId.systemDefault())
+                                        .toLocalDateTime()
+                                },
+                                needsReminder = needsReminder,
+                                remindMe = dueDate?.let { millis ->
+                                    val due = Instant.ofEpochMilli(millis)
+                                        .atZone(ZoneId.systemDefault())
+                                        .toLocalDateTime()
+                                    reminderOffset?.calculateReminderTime(due)
+                                },
+                                duration = Duration.fromMinutes(duration)
+                            )
+                            onAddClick(newTask)
+                        }
                     }
-                }) {
+                },
+                    enabled = !isSubmitting
+                ) {
                     Text(if (pagerState.currentPage < pageCount - 1) "Next" else "Done")
                 }
             }

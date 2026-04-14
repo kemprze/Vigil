@@ -1,10 +1,16 @@
 package com.kemprze.todoprototyping.model
 import android.R.attr.text
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.BottomAppBar
@@ -35,12 +41,28 @@ import com.kemprze.todoprototyping.model.tasks.TasksViewModel
 import com.kemprze.todoprototyping.ui.theme.TODOPrototypingTheme
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.FilterList
+import androidx.compose.material.icons.outlined.HourglassEmpty
+import androidx.compose.material.icons.outlined.Inbox
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.TextButton
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.kemprze.todoprototyping.data.DarkModePreferences
+import com.kemprze.todoprototyping.data.model.Category
+import com.kemprze.todoprototyping.data.model.Duration
+import com.kemprze.todoprototyping.data.model.FilterState
+import com.kemprze.todoprototyping.data.model.SortOrder
+import com.kemprze.todoprototyping.data.model.Priority
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TaskScreen(
         modifier: Modifier = Modifier,
@@ -51,19 +73,38 @@ fun TaskScreen(
 
     val taskUiState by tasksViewModel.uiState.collectAsState()
     var currentList by remember { mutableStateOf(ListTypes.INCOMPLETE) }
+    var showFilterSheet by remember { mutableStateOf(false) }
 
+    if (showFilterSheet) {
+        ModalBottomSheet(
+            onDismissRequest = {
+                showFilterSheet = false
+            }
+        ) {
+            FilterSheetContent(
+                filterState = taskUiState.filterState,
+                onFilterChanged = { newFilter ->
+                    tasksViewModel.onFilterChanged(newFilter)
+                },
+                onDismiss = { showFilterSheet = false }
+            )
+        }
+    }
     Scaffold(
         topBar = {
             MainTaskScreenAppBar(
-                onAddClick = onNavigateToAddTask,
-                onSettingsClick = onNavigateToSettings
+                onListTypeChange = {
+                        newListType -> currentList = newListType
+                },
+                currentList = currentList,
+                onSettingsClick = onNavigateToSettings,
+                onFilterClick = { showFilterSheet = true },
+                filterActive = taskUiState.filterState.isActive
             )
         },
         bottomBar = { MainTaskScreenBottomAppBar(
-            onListTypeChange = {
-                    newListType -> currentList = newListType
-                },
-            currentList = currentList
+            onAddClick = onNavigateToAddTask,
+
             )
         }
     ) { innerPadding ->
@@ -82,7 +123,11 @@ fun TaskScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainTaskScreenAppBar(modifier: Modifier = Modifier, onAddClick: () -> Unit,
+fun MainTaskScreenAppBar(modifier: Modifier = Modifier,
+                         currentList: ListTypes,
+                         filterActive: Boolean,
+                         onListTypeChange: (ListTypes) -> Unit,
+                         onFilterClick: () -> Unit,
                          onSettingsClick: () -> Unit) {
     TopAppBar(
         colors = TopAppBarDefaults.topAppBarColors(
@@ -90,15 +135,36 @@ fun MainTaskScreenAppBar(modifier: Modifier = Modifier, onAddClick: () -> Unit,
             titleContentColor = MaterialTheme.colorScheme.primary
         ),
         title = {
-            Text("Tasks")
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                SingleChoiceSegmentedButtonRow() {
+                    ListTypes.entries.forEachIndexed { index, listType ->
+                        SegmentedButton(
+                            selected = listType == currentList,
+                            onClick = { onListTypeChange(listType) },
+                            shape = SegmentedButtonDefaults.itemShape(
+                                index,
+                                ListTypes.entries.size
+                            ),
+                            icon = {},
+                            label = {
+                                Text(
+                                    listType.name.lowercase().replaceFirstChar { it.titlecase() })
+                            }
+                        )
+                    }
+                }
+            }
         },
         actions = {
             IconButton(
-                onClick = onAddClick
+                onClick = onFilterClick
             ) {
                 Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "Add new task"
+                    imageVector = if (filterActive) Icons.Filled.FilterList else Icons.Outlined.FilterList,
+                    contentDescription = "Filter tasks"
                 )
             }
             IconButton(
@@ -115,28 +181,29 @@ fun MainTaskScreenAppBar(modifier: Modifier = Modifier, onAddClick: () -> Unit,
 }
 
 @Composable
-fun MainTaskScreenBottomAppBar(onListTypeChange: (ListTypes) -> Unit,
-                               currentList: ListTypes,
-                               modifier: Modifier = Modifier) {
-    BottomAppBar(modifier) {
-        Row(
-            modifier = Modifier.fillMaxSize(),
-            horizontalArrangement = Arrangement.SpaceAround,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            SingleChoiceSegmentedButtonRow() {
-                ListTypes.entries.forEachIndexed { index, listType ->
-                    SegmentedButton(
-                        selected = listType == currentList,
-                        onClick = { onListTypeChange(listType) },
-                        shape = SegmentedButtonDefaults.itemShape(index, ListTypes.entries.size),
-                        icon = {},
-                        label = { Text(listType.name.lowercase().replaceFirstChar { it.titlecase() }) }
+fun MainTaskScreenBottomAppBar(
+                               modifier: Modifier = Modifier,
+                               onAddClick: () -> Unit
+) {
+    BottomAppBar(
+        actions = {},
+        modifier = modifier,
+        floatingActionButton = {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                FloatingActionButton(
+                    onClick = onAddClick
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Add new task"
                     )
                 }
             }
         }
-    }
+    )
 }
 
 @Composable
@@ -151,6 +218,19 @@ fun TaskList(incompleteTasks: List<simpleTask>,
         ListTypes.INCOMPLETE -> incompleteTasks
         ListTypes.COMPLETE -> completeTasks
     }
+    if (currentListItems.isEmpty()) {
+        val (icon, title, subtitle) = when (currentListType) {
+            ListTypes.INCOMPLETE -> if (completeTasks.isEmpty())
+                Triple(Icons.Outlined.Inbox, "Nothing here yet", "Add your first task with +")
+            else Triple(Icons.Outlined.CheckCircle, "All caught up", "Everything's done. Nice work.")
+            ListTypes.COMPLETE -> Triple(Icons.Outlined.HourglassEmpty, "Nothing completed yet", "Finished tasks will appear here")
+        }
+        EmptyState(icon = icon, title = title, subtitle = subtitle,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(32.dp))
+        return
+    }
 
     LazyColumn(
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -163,6 +243,138 @@ fun TaskList(incompleteTasks: List<simpleTask>,
             onTaskDeleted = onTaskDeleted,
                 modifier = Modifier.animateItem())
         }
+    }
+}
+
+@Composable
+private fun FilterSheetContent(
+    filterState: FilterState,
+    onFilterChanged: (FilterState) -> Unit,
+    onDismiss: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+    ) {
+        Text("Sort by",
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.primary
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            SortOrder.entries.forEach {
+                sort ->
+                FilterChip(
+                    selected = filterState.sortOrder == sort,
+                    onClick = { onFilterChanged(filterState.copy(sortOrder = sort)) },
+                    label = { Text(sort.label) }
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+        Text("Category",
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.primary)
+        Spacer(modifier = Modifier.height(8.dp))
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Category.entries.filter { it != Category.NONE }.forEach { category ->
+                FilterChip(
+                    selected = category in filterState.categories,
+                    onClick = {
+                        val updated = if (category in filterState.categories)
+                            filterState.categories - category
+                        else
+                            filterState.categories + category
+                        onFilterChanged(filterState.copy(categories = updated))
+                    },
+                    label = { Text(category.name.lowercase().replaceFirstChar { it.titlecase() })}
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+        Text("Priority", style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.primary)
+        Spacer(modifier = Modifier.height(8.dp))
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Priority.entries.forEach { priority ->
+                FilterChip(
+                    selected = priority in filterState.priorities,
+                    onClick = {
+                        val updated = if (priority in filterState.priorities)
+                            filterState.priorities - priority
+                        else
+                            filterState.priorities + priority
+                        onFilterChanged(filterState.copy(priorities = updated))
+                    },
+                    label = { Text("${priority.emoji} ${priority.label}")}
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+        Text("Duration", style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.primary)
+        Spacer(modifier = Modifier.height(8.dp))
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Duration.entries.forEach { duration ->
+                FilterChip(
+                    selected = duration in filterState.durations,
+                    onClick = {
+                        val updated = if (duration in filterState.durations)
+                            filterState.durations - duration
+                        else
+                            filterState.durations + duration
+                        onFilterChanged(filterState.copy(durations = updated))
+                    },
+                    label = { Text(duration.label) }
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+        TextButton(
+            onClick = { onFilterChanged(FilterState()) },
+            modifier = Modifier.align(Alignment.CenterHorizontally)
+        ) {
+            Text("Clear all filters")
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+    }
+}
+@Composable
+private fun EmptyState(
+    icon: ImageVector,
+    title: String,
+    subtitle: String,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            modifier = Modifier.size(64.dp),
+            tint = MaterialTheme.colorScheme.outline
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = subtitle,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.outline
+        )
     }
 }
 
