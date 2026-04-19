@@ -1,5 +1,5 @@
 package com.kemprze.todoprototyping.model
-import android.R.attr.text
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -13,14 +13,30 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.outlined.CalendarMonth
+import androidx.compose.material.icons.outlined.CalendarToday
+import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.FilterList
+import androidx.compose.material.icons.outlined.HourglassEmpty
+import androidx.compose.material.icons.outlined.Inbox
 import androidx.compose.material3.BottomAppBar
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -31,36 +47,20 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kemprze.todoprototyping.R
-import com.kemprze.todoprototyping.data.model.simpleTask
-import com.kemprze.todoprototyping.model.tasks.TasksViewModel
-import com.kemprze.todoprototyping.ui.theme.TODOPrototypingTheme
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.FilterList
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.outlined.CheckCircle
-import androidx.compose.material.icons.outlined.FilterList
-import androidx.compose.material.icons.outlined.HourglassEmpty
-import androidx.compose.material.icons.outlined.Inbox
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
-import androidx.compose.material3.TextButton
-import androidx.compose.ui.graphics.vector.ImageVector
-import com.kemprze.todoprototyping.data.DarkModePreferences
 import com.kemprze.todoprototyping.data.model.Category
 import com.kemprze.todoprototyping.data.model.Duration
 import com.kemprze.todoprototyping.data.model.FilterState
-import com.kemprze.todoprototyping.data.model.SortOrder
 import com.kemprze.todoprototyping.data.model.Priority
+import com.kemprze.todoprototyping.data.model.SortOrder
+import com.kemprze.todoprototyping.data.model.simpleTask
+import com.kemprze.todoprototyping.model.tasks.TasksViewModel
+import com.kemprze.todoprototyping.ui.theme.TODOPrototypingTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -68,7 +68,8 @@ fun TaskScreen(
         modifier: Modifier = Modifier,
         tasksViewModel: TasksViewModel = viewModel(),
         onNavigateToAddTask: () -> Unit,
-        onNavigateToSettings: () -> Unit
+        onNavigateToSettings: () -> Unit,
+        onCalendarClick: () -> Unit
 ) {
 
     val taskUiState by tasksViewModel.uiState.collectAsState()
@@ -104,7 +105,7 @@ fun TaskScreen(
         },
         bottomBar = { MainTaskScreenBottomAppBar(
             onAddClick = onNavigateToAddTask,
-
+            onCalendarClick = onCalendarClick
             )
         }
     ) { innerPadding ->
@@ -183,16 +184,30 @@ fun MainTaskScreenAppBar(modifier: Modifier = Modifier,
 @Composable
 fun MainTaskScreenBottomAppBar(
                                modifier: Modifier = Modifier,
-                               onAddClick: () -> Unit
+                               onAddClick: () -> Unit,
+                               onCalendarClick: () -> Unit
 ) {
     BottomAppBar(
-        actions = {},
+        actions = {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = modifier.padding(start = 8.dp)
+                    .clickable(onClick = onCalendarClick)
+            ) {
+                Icon(
+                    Icons.Outlined.CalendarToday,
+                    contentDescription = "Calendar view"
+                )
+                Spacer(modifier = modifier.height(4.dp))
+                Text(
+                    text = "Calendar",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        },
         modifier = modifier,
         floatingActionButton = {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center
-            ) {
                 FloatingActionButton(
                     onClick = onAddClick
                 ) {
@@ -201,7 +216,6 @@ fun MainTaskScreenBottomAppBar(
                         contentDescription = "Add new task"
                     )
                 }
-            }
         }
     )
 }
@@ -384,7 +398,8 @@ fun TaskListPreview() {
     TODOPrototypingTheme {
         TaskScreen(
             onNavigateToAddTask = { },
-            onNavigateToSettings = { }
+            onNavigateToSettings = { },
+            onCalendarClick = { }
         )
     }
 }
@@ -396,7 +411,8 @@ fun TaskListPreviewDark() {
     TODOPrototypingTheme(darkTheme = true) {
         TaskScreen(
             onNavigateToAddTask = { },
-            onNavigateToSettings = { }
+            onNavigateToSettings = { },
+            onCalendarClick = { }
         )
     }
 }
