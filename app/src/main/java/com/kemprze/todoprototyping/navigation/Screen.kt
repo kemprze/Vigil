@@ -5,4 +5,5 @@ sealed class Screen(val route: String) {
     object AddTaskScreen: Screen("add_task_screen")
     object SettingsScreen: Screen("settings_screen")
     object CalendarScreen: Screen("calendar_screen")
+    object StatsScreen: Screen("stats_screen")
 }

@@ -25,6 +25,7 @@ import androidx.navigation.compose.rememberNavController
 import com.kemprze.todoprototyping.data.DarkModePreferences
 import com.kemprze.todoprototyping.model.AddTaskWizard
 import com.kemprze.todoprototyping.model.CalendarScreen
+import com.kemprze.todoprototyping.model.StatsScreen
 import com.kemprze.todoprototyping.model.TaskScreen
 import com.kemprze.todoprototyping.model.settings.SettingsScreen
 import com.kemprze.todoprototyping.model.tasks.TasksViewModel
@@ -100,7 +101,8 @@ fun AppNavigation(modifier: Modifier = Modifier,
                 onNavigateToSettings = {
                     navController.navigate(Screen.SettingsScreen.route)
                 },
-                onCalendarClick = { navController.navigate(Screen.CalendarScreen.route) }
+                onCalendarClick = { navController.navigate(Screen.CalendarScreen.route) },
+                onStatsClick = { navController.navigate(Screen.StatsScreen.route) }
             )
         }
         composable(route = Screen.AddTaskScreen.route) {
@@ -129,6 +131,12 @@ fun AppNavigation(modifier: Modifier = Modifier,
         composable(route = Screen.CalendarScreen.route) {
             CalendarScreen(
                 tasks = tasksViewModel.uiState.collectAsState().value.tasks + tasksViewModel.uiState.collectAsState().value.completedTasks,
+                onNavigateBack = { navController.navigateUp() }
+            )
+        }
+        composable(route = Screen.StatsScreen.route) {
+            StatsScreen(tasks = tasksViewModel.uiState.collectAsState().value.tasks,
+                completedTasks = tasksViewModel.uiState.collectAsState().value.completedTasks,
                 onNavigateBack = { navController.navigateUp() }
             )
         }

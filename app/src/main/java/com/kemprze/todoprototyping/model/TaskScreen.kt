@@ -17,6 +17,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.outlined.BarChart
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.CalendarToday
 import androidx.compose.material.icons.outlined.CheckCircle
@@ -69,7 +70,8 @@ fun TaskScreen(
         tasksViewModel: TasksViewModel = viewModel(),
         onNavigateToAddTask: () -> Unit,
         onNavigateToSettings: () -> Unit,
-        onCalendarClick: () -> Unit
+        onCalendarClick: () -> Unit,
+        onStatsClick: () -> Unit
 ) {
 
     val taskUiState by tasksViewModel.uiState.collectAsState()
@@ -105,7 +107,8 @@ fun TaskScreen(
         },
         bottomBar = { MainTaskScreenBottomAppBar(
             onAddClick = onNavigateToAddTask,
-            onCalendarClick = onCalendarClick
+            onCalendarClick = onCalendarClick,
+            onStatsClick = onStatsClick
             )
         }
     ) { innerPadding ->
@@ -185,7 +188,8 @@ fun MainTaskScreenAppBar(modifier: Modifier = Modifier,
 fun MainTaskScreenBottomAppBar(
                                modifier: Modifier = Modifier,
                                onAddClick: () -> Unit,
-                               onCalendarClick: () -> Unit
+                               onCalendarClick: () -> Unit,
+                               onStatsClick: () -> Unit
 ) {
     BottomAppBar(
         actions = {
@@ -201,6 +205,18 @@ fun MainTaskScreenBottomAppBar(
                 Spacer(modifier = modifier.height(4.dp))
                 Text(
                     text = "Calendar",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.padding(start = 8.dp).clickable(onClick = onStatsClick)
+            ) {
+                Icon(Icons.Outlined.BarChart, contentDescription = "Stats view")
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Stats",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -399,7 +415,8 @@ fun TaskListPreview() {
         TaskScreen(
             onNavigateToAddTask = { },
             onNavigateToSettings = { },
-            onCalendarClick = { }
+            onCalendarClick = { },
+            onStatsClick = { }
         )
     }
 }
@@ -412,7 +429,8 @@ fun TaskListPreviewDark() {
         TaskScreen(
             onNavigateToAddTask = { },
             onNavigateToSettings = { },
-            onCalendarClick = { }
+            onCalendarClick = { },
+            onStatsClick = { }
         )
     }
 }
