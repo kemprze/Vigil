@@ -3,6 +3,7 @@ package com.kemprze.todoprototyping.model.tasks
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kemprze.todoprototyping.data.model.Category
 import com.kemprze.todoprototyping.data.model.Duration
 import com.kemprze.todoprototyping.data.model.FilterState
@@ -42,6 +43,10 @@ class TasksViewModel(private val taskRepository: TaskRepository,
                 applyFilterAndUpdate()
             }
         }
+    }
+
+    fun getTaskById(id: String): simpleTask? {
+        return _allTasks.find { it.id == id }
     }
 
     private fun applyFilterAndUpdate() {
@@ -121,6 +126,12 @@ class TasksViewModel(private val taskRepository: TaskRepository,
     fun onTaskCompleted(task: simpleTask, isCompleted: Boolean) {
         viewModelScope.launch {
             taskRepository.updateTask(task.copy(isCompleted = isCompleted))
+        }
+    }
+
+    fun onTaskUpdated(task: simpleTask) {
+        viewModelScope.launch {
+            taskRepository.updateTask(task)
         }
     }
 

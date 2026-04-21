@@ -166,7 +166,8 @@ fun CalendarScreen(
                         TaskCard(
                             task = task,
                             onTaskCompleted = { _, _ -> },
-                            onTaskDeleted = {}
+                            onTaskDeleted = {},
+                            onEditClick = {}
                         )
                     }
                 }

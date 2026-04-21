@@ -71,7 +71,8 @@ fun TaskScreen(
         onNavigateToAddTask: () -> Unit,
         onNavigateToSettings: () -> Unit,
         onCalendarClick: () -> Unit,
-        onStatsClick: () -> Unit
+        onStatsClick: () -> Unit,
+        onEditClick: (simpleTask) -> Unit
 ) {
 
     val taskUiState by tasksViewModel.uiState.collectAsState()
@@ -118,6 +119,7 @@ fun TaskScreen(
             completeTasks = taskUiState.completedTasks,
             onTaskCompleted = { task, isCompleted -> tasksViewModel.onTaskCompleted(task, isCompleted)},
             onTaskDeleted = { task -> tasksViewModel.onTaskDeleted(task) },
+            onEditClick = onEditClick,
             modifier = modifier
                 .fillMaxSize()
                 .padding(innerPadding)
@@ -242,6 +244,7 @@ fun TaskList(incompleteTasks: List<simpleTask>,
              currentListType: ListTypes,
              onTaskCompleted: (simpleTask, Boolean) -> Unit,
              onTaskDeleted: (simpleTask) -> Unit,
+             onEditClick: (simpleTask) -> Unit,
              modifier: Modifier = Modifier) {
 
     val currentListItems = when (currentListType) {
@@ -271,7 +274,8 @@ fun TaskList(incompleteTasks: List<simpleTask>,
             task -> TaskCard(task = task,
             onTaskCompleted = onTaskCompleted,
             onTaskDeleted = onTaskDeleted,
-                modifier = Modifier.animateItem())
+            onEditClick = onEditClick,
+            modifier = Modifier.animateItem())
         }
     }
 }
@@ -416,7 +420,8 @@ fun TaskListPreview() {
             onNavigateToAddTask = { },
             onNavigateToSettings = { },
             onCalendarClick = { },
-            onStatsClick = { }
+            onStatsClick = { },
+            onEditClick = { }
         )
     }
 }
@@ -430,7 +435,8 @@ fun TaskListPreviewDark() {
             onNavigateToAddTask = { },
             onNavigateToSettings = { },
             onCalendarClick = { },
-            onStatsClick = { }
+            onStatsClick = { },
+            onEditClick = { }
         )
     }
 }

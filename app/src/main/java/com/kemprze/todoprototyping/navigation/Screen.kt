@@ -6,4 +6,7 @@ sealed class Screen(val route: String) {
     object SettingsScreen: Screen("settings_screen")
     object CalendarScreen: Screen("calendar_screen")
     object StatsScreen: Screen("stats_screen")
+    object EditTaskScreen: Screen("edit_task_screen/{task_id}") {
+        fun createRoute(task_id: String) = "edit_task_screen/${task_id}"
+    }
 }

@@ -19,12 +19,15 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.kemprze.todoprototyping.data.DarkModePreferences
 import com.kemprze.todoprototyping.model.AddTaskWizard
 import com.kemprze.todoprototyping.model.CalendarScreen
+import com.kemprze.todoprototyping.model.EditTaskScreen
 import com.kemprze.todoprototyping.model.StatsScreen
 import com.kemprze.todoprototyping.model.TaskScreen
 import com.kemprze.todoprototyping.model.settings.SettingsScreen
@@ -102,7 +105,8 @@ fun AppNavigation(modifier: Modifier = Modifier,
                     navController.navigate(Screen.SettingsScreen.route)
                 },
                 onCalendarClick = { navController.navigate(Screen.CalendarScreen.route) },
-                onStatsClick = { navController.navigate(Screen.StatsScreen.route) }
+                onStatsClick = { navController.navigate(Screen.StatsScreen.route) },
+                onEditClick = { task -> navController.navigate(Screen.EditTaskScreen.createRoute(task.id))}
             )
         }
         composable(route = Screen.AddTaskScreen.route) {
@@ -137,6 +141,18 @@ fun AppNavigation(modifier: Modifier = Modifier,
         composable(route = Screen.StatsScreen.route) {
             StatsScreen(tasks = tasksViewModel.uiState.collectAsState().value.tasks,
                 completedTasks = tasksViewModel.uiState.collectAsState().value.completedTasks,
+                onNavigateBack = { navController.navigateUp() }
+            )
+        }
+        composable(route = Screen.EditTaskScreen.route,
+            arguments = listOf(navArgument("task_id") {
+                type = NavType.StringType }
+            )) {
+            backStackEntry ->
+                val taskId = backStackEntry.arguments?.getString("task_id") ?: return@composable
+            EditTaskScreen(
+                taskId = taskId,
+                tasksViewModel = tasksViewModel,
                 onNavigateBack = { navController.navigateUp() }
             )
         }

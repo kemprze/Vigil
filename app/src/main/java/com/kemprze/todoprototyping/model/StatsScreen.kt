@@ -131,6 +131,7 @@ private fun DonutChart(
     modifier: Modifier = Modifier
 ) {
     val textMeasurer = rememberTextMeasurer()
+    val centerTextColor = MaterialTheme.colorScheme.onSurface
 
     Canvas(
         modifier = modifier.size(240.dp)
@@ -164,7 +165,7 @@ private fun DonutChart(
 
         val label = if (total == 0) "No tasks" else "${total} tasks"
         val textLayout = textMeasurer.measure(
-            label, style = TextStyle(fontSize = 18.sp)
+            label, style = TextStyle(fontSize = 18.sp, color = centerTextColor)
         )
         drawText(
             textLayoutResult = textLayout,
