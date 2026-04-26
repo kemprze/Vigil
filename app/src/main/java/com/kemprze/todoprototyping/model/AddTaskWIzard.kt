@@ -23,12 +23,14 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
@@ -37,7 +39,10 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TimePicker
+import androidx.compose.material3.TimePickerState
 import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -60,6 +65,8 @@ import com.kemprze.todoprototyping.data.model.simpleTask
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.ZoneId
+import java.time.LocalDate
+import java.time.LocalDateTime
 
 @Composable
 fun AddTaskWizard(
@@ -74,6 +81,8 @@ fun AddTaskWizard(
     var priority by rememberSaveable { mutableStateOf(Priority.NORMAL) }
     var category by rememberSaveable { mutableStateOf(Category.NONE) }
     var dueDate by rememberSaveable { mutableStateOf<Long?>(null) }
+    var dueTimeHour by rememberSaveable { mutableStateOf<Int?>(null) }
+    var dueTimeMinute by rememberSaveable { mutableStateOf<Int?>(null) }
     var needsReminder by rememberSaveable { mutableStateOf(false) }
     var duration by rememberSaveable { mutableIntStateOf(0) }
     var reminderOffset by rememberSaveable {
@@ -115,7 +124,17 @@ fun AddTaskWizard(
                         needsReminder = needsReminder,
                         onReminderChange = { needsReminder = it },
                         selectedOffset = reminderOffset,
-                        onOffsetSelected = { reminderOffset = it }
+                        onOffsetSelected = { reminderOffset = it },
+                        dueTimeHour = dueTimeHour,
+                        dueTimeMinute = dueTimeMinute,
+                        onTimeSet = { hour, minute ->
+                            dueTimeHour = hour
+                            dueTimeMinute = minute
+                        },
+                        onTimeCleared = {
+                            dueTimeHour = null
+                            dueTimeMinute = null
+                        }
                     )
                     3 -> WizardStepDuration(
                         duration = duration,
@@ -127,8 +146,7 @@ fun AddTaskWizard(
                     )
                 }
             }
-            Row(
-                modifier = Modifier
+            Row(modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -177,10 +195,14 @@ fun AddTaskWizard(
                                 taskDescription = taskDescription,
                                 priority = priority,
                                 category = category,
-                                dueDate = dueDate?.let {
-                                    Instant.ofEpochMilli(it)
+                                dueDate = dueDate?.let { millis ->
+                                    val date = Instant.ofEpochMilli(millis)
                                         .atZone(ZoneId.systemDefault())
-                                        .toLocalDateTime()
+                                        .toLocalDate()
+                                    if (dueTimeHour != null && dueTimeMinute != null)
+                                        date.atTime(dueTimeHour!!, dueTimeMinute!!)
+                                    else
+                                        date.atStartOfDay()
                                 },
                                 needsReminder = needsReminder,
                                 remindMe = dueDate?.let { millis ->
@@ -277,7 +299,12 @@ fun WizardStepDetails(
                         FilterChip(
                             selected = selectedCategory == cat,
                             onClick = { onCategorySelected(cat) },
-                            label = { Text("${stringResource(id = cat.categoryImageRes)} ${stringResource(id = cat.categoryNameRes)}") }
+                            label = {
+                                Text(
+                                    if (cat == Category.NONE) "🚫 None"
+                                    else "${stringResource(id = cat.categoryImageRes)} ${stringResource(id = cat.categoryNameRes)}"
+                                )
+                            }
                         )
                     }
                 }
@@ -315,6 +342,7 @@ fun WizardStepDetails(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WizardStepWhen(
     dueDateMillis: Long?,
@@ -322,7 +350,11 @@ fun WizardStepWhen(
     needsReminder: Boolean,
     onReminderChange: (Boolean) -> Unit,
     selectedOffset: ReminderOffset?,
-    onOffsetSelected: (ReminderOffset) -> Unit
+    onOffsetSelected: (ReminderOffset) -> Unit,
+    dueTimeHour: Int?,
+    dueTimeMinute: Int?,
+    onTimeSet: (Int, Int) -> Unit,
+    onTimeCleared: () -> Unit
 ) {
     val datePickerState = rememberDatePickerState()
     val permissionLauncher = rememberLauncherForActivityResult(contract = ActivityResultContracts.RequestPermission(),
@@ -331,6 +363,13 @@ fun WizardStepWhen(
 
             }
         })
+    var hasTime by remember { mutableStateOf(dueTimeHour != null) }
+    var showTimePicker by remember { mutableStateOf(false) }
+    val timePickerState = rememberTimePickerState(
+        initialHour = dueTimeHour ?: 12,
+        initialMinute = dueTimeMinute ?: 0
+    )
+
 
     LaunchedEffect(
         datePickerState.selectedDateMillis
@@ -389,6 +428,37 @@ fun WizardStepWhen(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
+                    text = "Set time",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
+                Switch(
+                    checked = hasTime,
+                    onCheckedChange = {
+                            isChecked ->
+                        hasTime = isChecked
+                        if (isChecked) showTimePicker = true
+                        else onTimeCleared()
+                    },
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = MaterialTheme.colorScheme.primary,
+                        checkedTrackColor = MaterialTheme.colorScheme.onPrimary,
+                        uncheckedThumbColor = MaterialTheme.colorScheme.onPrimary,
+                        uncheckedTrackColor = Color.Transparent,
+                        uncheckedBorderColor = MaterialTheme.colorScheme.onPrimary
+                    )
+
+                )
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
                     text = "Remind me",
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onPrimary
@@ -412,6 +482,7 @@ fun WizardStepWhen(
                     )
                 )
             }
+
             if (needsReminder) {
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -435,6 +506,55 @@ fun WizardStepWhen(
                                 selectedBorderColor = MaterialTheme.colorScheme.onPrimary
                             )
                         )
+                    }
+                }
+            }
+
+            if (showTimePicker) {
+                ModalBottomSheet(
+                    onDismissRequest = {
+                        if (dueTimeHour == null) hasTime = false
+                        showTimePicker = false
+                    }
+                ) {
+                    Column(modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        Text(
+                            text = "Set time",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        TimePicker(state = timePickerState)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.End,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            TextButton(
+                                onClick = {
+                                    hasTime = false
+                                    onTimeCleared()
+                                    showTimePicker = false
+                                }
+                            ) {
+                                Text(
+                                    text = "Cancel"
+                                    // potential color issue, needs checking
+                                )
+                            }
+                            TextButton(onClick = {
+                                onTimeSet(timePickerState.hour, timePickerState.minute)
+                            }) {
+                                Text(
+                                    text = "Confirm",
+                                    // potential color issue, needs checking
+                                )
+                            }
+                        }
                     }
                 }
             }
