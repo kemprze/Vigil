@@ -1,3 +1,5 @@
+import org.gradle.kotlin.dsl.implementation
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -6,13 +8,13 @@ plugins {
 }
 
 android {
-    namespace = "com.kemprze.todoprototyping"
+    namespace = "com.kemprze.vigil"
     compileSdk {
         version = release(36)
     }
 
     defaultConfig {
-        applicationId = "com.kemprze.todoprototyping"
+        applicationId = "com.kemprze.vigil"
         minSdk = 31
         targetSdk = 36
         versionCode = 1
@@ -40,6 +42,11 @@ android {
     buildFeatures {
         compose = true
     }
+    packaging {
+        resources {
+            excludes += "META-INF/DEPENDENCIES"
+        }
+    }
 }
 
 dependencies {
@@ -63,6 +70,9 @@ dependencies {
     implementation("androidx.work:work-runtime-ktx:2.11.2")
     implementation(libs.androidx.compose.foundation.layout)
     implementation(libs.androidx.compose.runtime.saveable)
+    implementation("com.google.android.gms:play-services-auth:21.0.0")
+    implementation("com.google.api-client:google-api-client-android:2.2.0")
+    implementation("com.google.apis:google-api-services-calendar:v3-rev20231123-2.0.0")
     ksp(libs.room.compiler)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
