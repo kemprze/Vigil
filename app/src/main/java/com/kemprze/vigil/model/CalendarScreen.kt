@@ -38,7 +38,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.kemprze.vigil.data.model.Category
-import com.kemprze.vigil.data.model.simpleTask
+import com.kemprze.vigil.data.model.SimpleTask
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.TextStyle
@@ -47,7 +47,7 @@ import java.util.Locale
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CalendarScreen(
-    tasks: List<simpleTask>,
+    tasks: List<SimpleTask>,
     onNavigateBack: () -> Unit
 ) {
     var currentMonth by remember { mutableStateOf(YearMonth.now()) }

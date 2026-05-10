@@ -28,14 +28,14 @@ import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.sp
 import com.kemprze.vigil.data.model.Category
-import com.kemprze.vigil.data.model.simpleTask
+import com.kemprze.vigil.data.model.SimpleTask
 
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 fun StatsScreen(
-    tasks: List<simpleTask>,
-    completedTasks: List<simpleTask>,
+    tasks: List<SimpleTask>,
+    completedTasks: List<SimpleTask>,
     onNavigateBack: () -> Unit
 ) {
     var showCompleted by remember { mutableStateOf(false) }

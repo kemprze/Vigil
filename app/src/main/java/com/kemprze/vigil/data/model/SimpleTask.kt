@@ -8,7 +8,7 @@ import java.util.UUID
 
 @Entity(tableName = "tasks")
 @TypeConverters(Converters::class)
-data class simpleTask(
+data class SimpleTask(
     @PrimaryKey var id: String = UUID.randomUUID().toString(),
     var taskName: String,
     var taskDescription: String = "",
@@ -20,5 +20,8 @@ data class simpleTask(
     var createdOn: LocalDateTime? = LocalDateTime.now(),
     var category: Category = Category.NONE,
     var isCompleted: Boolean = false,
-    var duration: Duration = Duration.MEDIUM
+    var duration: Duration = Duration.MEDIUM,
+    var googleCalendarEventId: String? = null,
+    var parentTaskId: String? = null,
+    var subtaskOrder: Int? = null
 )

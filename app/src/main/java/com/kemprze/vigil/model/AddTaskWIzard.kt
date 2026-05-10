@@ -60,7 +60,7 @@ import com.kemprze.vigil.data.model.Category
 import com.kemprze.vigil.data.model.Duration
 import com.kemprze.vigil.data.model.Priority
 import com.kemprze.vigil.data.model.ReminderOffset
-import com.kemprze.vigil.data.model.simpleTask
+import com.kemprze.vigil.data.model.SimpleTask
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.ZoneId
@@ -69,7 +69,7 @@ import java.time.ZoneId
 fun AddTaskWizard(
     modifier: Modifier = Modifier,
     onNavigateBack: () -> Unit,
-    onAddClick: (simpleTask) -> Unit
+    onAddClick: (SimpleTask) -> Unit
 ) {
     val pageCount = 5
     val pagerState = rememberPagerState(initialPage = 0, pageCount = { 5 })
@@ -187,7 +187,7 @@ fun AddTaskWizard(
                         }
                     } else {
                         if (!isSubmitting) {
-                            val newTask = simpleTask(
+                            val newTask = SimpleTask(
                                 taskName = taskName,
                                 taskDescription = taskDescription,
                                 priority = priority,

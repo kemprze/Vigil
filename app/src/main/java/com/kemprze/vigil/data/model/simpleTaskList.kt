@@ -1,6 +1,6 @@
 package com.kemprze.vigil.data.model
 
-data class simpleTaskList(
-    val taskList: MutableList<simpleTask> = mutableListOf(),
-    val finishedTaskList: MutableList<simpleTask> = mutableListOf()
+data class SimpleTaskList(
+    val taskList: MutableList<SimpleTask> = mutableListOf(),
+    val finishedTaskList: MutableList<SimpleTask> = mutableListOf()
 )

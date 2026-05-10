@@ -45,7 +45,7 @@ import androidx.compose.ui.unit.dp
 import com.kemprze.vigil.data.model.Category
 import com.kemprze.vigil.data.model.Duration
 import com.kemprze.vigil.data.model.Priority
-import com.kemprze.vigil.data.model.simpleTask
+import com.kemprze.vigil.data.model.SimpleTask
 import com.kemprze.vigil.ui.theme.TODOPrototypingTheme
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -139,10 +139,10 @@ fun DetailsRow(dueDate: LocalDateTime?,
 }
 
 @Composable
-fun TaskCard(task: simpleTask,
-             onTaskCompleted: (simpleTask, Boolean) -> Unit,
-             onTaskDeleted: (simpleTask) -> Unit,
-             onEditClick: (simpleTask) -> Unit,
+fun TaskCard(task: SimpleTask,
+             onTaskCompleted: (SimpleTask, Boolean) -> Unit,
+             onTaskDeleted: (SimpleTask) -> Unit,
+             onEditClick: (SimpleTask) -> Unit,
              modifier: Modifier = Modifier) {
     var details by remember { mutableStateOf(false) }
     val dismissState = rememberSwipeToDismissBoxState(
@@ -260,7 +260,7 @@ fun TaskCheckbox(modifier: Modifier = Modifier,
 @Preview
 @Composable
 fun TaskCardPreview() {
-    val sampleTask = simpleTask(
+    val sampleTask = SimpleTask(
         taskName = "Throw trash out",
         taskDescription = "The trashcan is overflowing",
         dueDate = LocalDateTime.of(2025, 12, 1, 12, 42),
@@ -282,7 +282,7 @@ fun TaskCardPreview() {
 @Preview()
 @Composable
 fun TaskCardPreviewDark() {
-    val sampleTask = simpleTask(
+    val sampleTask = SimpleTask(
         taskName = "Throw trash out",
         taskDescription = "The trashcan is overflowing",
         dueDate = LocalDateTime.of(2025, 12, 1, 12, 42),

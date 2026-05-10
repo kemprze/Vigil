@@ -1,8 +1,14 @@
 package com.kemprze.vigil.sync
+import com.google.api.services.calendar.model.Event
+import com.google.api.services.calendar.model.EventDateTime
+import com.google.api.client.util.DateTime
+import java.time.LocalTime
+import java.time.ZoneId
 import android.content.Context
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
+import com.kemprze.vigil.data.model.SimpleTask
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -48,6 +54,50 @@ object GoogleCalendarSync {
                 service.calendars().insert(newCalendar).execute().id
             } catch (e: Exception) {
                 android.util.Log.d("VIGILSync", "setupVigilCalendar failed: ${e.message}")
+                null
+            }
+        }
+    }
+
+    suspend fun syncTaskToCalendar(context: Context, task: SimpleTask, calendarId: String): String? {
+        return withContext(Dispatchers.IO) {
+            try {
+                val service = getCalendarService(context) ?: return@withContext null
+
+                if (task.dueDate == null) return@withContext null
+
+
+                val event = Event().apply {
+                    summary = task.taskName
+                    description = task.taskDescription.ifEmpty { null }
+
+                    reminders = Event.Reminders().apply {
+                        useDefault = false
+                        overrides = listOf()
+                    }
+                }
+
+                val zoneId = ZoneId.systemDefault()
+                val dueDate = task.dueDate ?: return@withContext null
+                val hasTime = dueDate.toLocalTime() != LocalTime.MIDNIGHT
+
+
+                if (hasTime) {
+                    val startMillis = dueDate.atZone(zoneId).toInstant().toEpochMilli()
+                    val endMillis = dueDate.plusMinutes(task.duration.maxMinutes.toLong()
+                        .coerceAtMost(120L)).atZone(zoneId).toInstant().toEpochMilli()
+
+                    event.start = EventDateTime().setDateTime(DateTime(startMillis)).setTimeZone(zoneId.id)
+                    event.end = EventDateTime().setDateTime(DateTime(endMillis)).setTimeZone(zoneId.id)
+                } else {
+                    val dateStr = dueDate.toLocalDate().toString()
+                    event.start = EventDateTime().setDate(DateTime(dateStr))
+                    event.end = EventDateTime().setDate(DateTime(dateStr))
+                }
+
+                service.events().insert(calendarId, event).execute().id
+            } catch (e: Exception) {
+                android.util.Log.d("VIGILSync", "setTaskToCalendar failed: ${e.message}")
                 null
             }
         }

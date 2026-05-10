@@ -3,31 +3,34 @@ package com.kemprze.vigil.model.tasks
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.kemprze.vigil.data.SettingsDataStore
 import com.kemprze.vigil.data.model.Category
 import com.kemprze.vigil.data.model.Duration
 import com.kemprze.vigil.data.model.FilterState
 import com.kemprze.vigil.data.model.Priority
 import com.kemprze.vigil.data.model.ReminderWorker
 import com.kemprze.vigil.data.model.SortOrder
-import com.kemprze.vigil.data.model.simpleTask
+import com.kemprze.vigil.data.model.SimpleTask
 import com.kemprze.vigil.data.repository.TaskRepository
+import com.kemprze.vigil.sync.GoogleCalendarSync
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 
 data class TasksUiState(
-    val tasks: List<simpleTask> = emptyList(),
-    val completedTasks: List<simpleTask> = emptyList(),
+    val tasks: List<SimpleTask> = emptyList(),
+    val completedTasks: List<SimpleTask> = emptyList(),
     val isLoading: Boolean = false,
     val filterState: FilterState = FilterState()
 )
 class TasksViewModel(private val taskRepository: TaskRepository,
                      application: Application): AndroidViewModel(application) {
     private val _uiState = MutableStateFlow(TasksUiState())
-    private var _allTasks: List<simpleTask> = emptyList()
+    private var _allTasks: List<SimpleTask> = emptyList()
     private var _currentFilter: FilterState = FilterState()
     val uiState: StateFlow<TasksUiState> = _uiState.asStateFlow()
 
@@ -44,7 +47,7 @@ class TasksViewModel(private val taskRepository: TaskRepository,
         }
     }
 
-    fun getTaskById(id: String): simpleTask? {
+    fun getTaskById(id: String): SimpleTask? {
         return _allTasks.find { it.id == id }
     }
 
@@ -85,7 +88,7 @@ class TasksViewModel(private val taskRepository: TaskRepository,
                     remindMe: LocalDateTime?,
                     category: Category,
                     duration: Duration) {
-        val newTask = simpleTask(
+        val newTask = SimpleTask(
             taskName = taskName,
             taskDescription = taskDescription,
             priority = priority,
@@ -99,6 +102,18 @@ class TasksViewModel(private val taskRepository: TaskRepository,
 
         viewModelScope.launch {
             taskRepository.insertTask(newTask)
+
+            val context = getApplication<Application>()
+            val settingsDataStore = SettingsDataStore(context)
+            val calendarId = settingsDataStore.googleSyncFlow.first()
+
+            if (calendarId != null && newTask.dueDate != null) {
+                val eventId = GoogleCalendarSync.syncTaskToCalendar(context, newTask, calendarId)
+
+                if (eventId != null) {
+                    taskRepository.updateTask(newTask.copy(googleCalendarEventId = eventId))
+                }
+            }
 
             if (needsReminder && newTask.remindMe != null) {
                 val delay = java.time.temporal.ChronoUnit.MILLIS.between(
@@ -122,19 +137,19 @@ class TasksViewModel(private val taskRepository: TaskRepository,
         }
     }
 
-    fun onTaskCompleted(task: simpleTask, isCompleted: Boolean) {
+    fun onTaskCompleted(task: SimpleTask, isCompleted: Boolean) {
         viewModelScope.launch {
             taskRepository.updateTask(task.copy(isCompleted = isCompleted))
         }
     }
 
-    fun onTaskUpdated(task: simpleTask) {
+    fun onTaskUpdated(task: SimpleTask) {
         viewModelScope.launch {
             taskRepository.updateTask(task)
         }
     }
 
-    fun onTaskDeleted(task: simpleTask) {
+    fun onTaskDeleted(task: SimpleTask) {
         viewModelScope.launch {
             taskRepository.deleteTask(task)
         }
