@@ -95,7 +95,6 @@ fun EditTaskScreen(
                 actions = {
                     TextButton(
                         onClick = {
-                            android.util.Log.d("VIGILEdit", "Save tapped")
                             tasksViewModel.onTaskUpdated(
                                 task.copy(
                                     taskName = taskName,

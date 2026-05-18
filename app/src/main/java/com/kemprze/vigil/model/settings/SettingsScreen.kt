@@ -74,20 +74,16 @@ fun SettingsScreen(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { result ->
         val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
-        android.util.Log.d("VIGILSync", "Launcher result received, result code: ${result.resultCode}")
         try {
             task.getResult(ApiException::class.java)
             isConnected = true
             scope.launch {
                 val calendarId = GoogleCalendarSync.setupVigilCalendar(context)
-                android.util.Log.d("VIGILSync", "Calendar ID returned: $calendarId")
                 if (calendarId != null) {
                     settingsViewModel.saveGoogleCalendarId(calendarId)
-                    android.util.Log.d("VIGILSync", "Calendar ID saved")
                 }
             }
         } catch (e: ApiException) {
-            android.util.Log.d("VIGILSync", "Sign-in failed, error code: ${e.statusCode}")
             isConnected = false
         }
     }

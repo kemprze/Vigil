@@ -53,7 +53,6 @@ object GoogleCalendarSync {
 
                 service.calendars().insert(newCalendar).execute().id
             } catch (e: Exception) {
-                android.util.Log.d("VIGILSync", "setupVigilCalendar failed: ${e.message}")
                 null
             }
         }
@@ -97,7 +96,6 @@ object GoogleCalendarSync {
 
                 service.events().insert(calendarId, event).execute().id
             } catch (e: Exception) {
-                android.util.Log.d("VIGILSync", "setTaskToCalendar failed: ${e.message}")
                 null
             }
         }
@@ -138,7 +136,6 @@ object GoogleCalendarSync {
                 service.events().update(calendarId, eventId, event).execute()
                 true
             } catch (e: Exception) {
-                android.util.Log.d("VIGILSync", "updateCalendarEvent failed: ${e.message}")
                 false
             }
         }
@@ -151,7 +148,6 @@ object GoogleCalendarSync {
                 service.events().delete(calendarId, eventId).execute()
                 true
             } catch (e: Exception) {
-                android.util.Log.d("VIGILSync", "deleteCalendarEvent failed: ${e.message}")
                 false
             }
         }
