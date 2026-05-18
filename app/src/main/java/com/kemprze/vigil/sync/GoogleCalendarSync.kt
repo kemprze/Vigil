@@ -102,4 +102,58 @@ object GoogleCalendarSync {
             }
         }
     }
+
+    suspend fun updateCalendarEvent(context: Context, task: SimpleTask, calendarId: String, eventId: String): Boolean {
+        return withContext(Dispatchers.IO) {
+            try {
+                val service = getCalendarService(context) ?: return@withContext false
+
+                val event = Event().apply {
+                    summary = task.taskName
+                    description = task.taskDescription.ifEmpty { null }
+                    reminders = Event.Reminders().apply {
+                        useDefault = false
+                        overrides = listOf()
+                    }
+                }
+
+                val zoneId = ZoneId.systemDefault()
+              
+                val dueDate = task.dueDate ?: return@withContext false
+                val hasTime = dueDate.toLocalTime() != LocalTime.MIDNIGHT
+
+                if (hasTime) {
+                    val startMillis = dueDate.atZone(zoneId).toInstant().toEpochMilli()
+                    val endMillis = dueDate.plusMinutes(task.duration.maxMinutes.toLong()
+                        .coerceAtMost(120L)).atZone(zoneId).toInstant().toEpochMilli()
+
+                    event.start = EventDateTime().setDateTime(DateTime(startMillis)).setTimeZone(zoneId.id)
+                    event.end = EventDateTime().setDateTime(DateTime(endMillis)).setTimeZone(zoneId.id)
+                } else {
+                    val dateStr = dueDate.toLocalDate().toString()
+                    event.start = EventDateTime().setDate(DateTime(dateStr))
+                    event.end = EventDateTime().setDate(DateTime(dateStr))
+                }
+
+                service.events().update(calendarId, eventId, event).execute()
+                true
+            } catch (e: Exception) {
+                android.util.Log.d("VIGILSync", "updateCalendarEvent failed: ${e.message}")
+                false
+            }
+        }
+    }
+    suspend fun deleteCalendarEvent(context: Context, calendarId: String, eventId: String): Boolean {
+        return withContext(Dispatchers.IO) {
+            try {
+                val service = getCalendarService(context) ?: return@withContext false
+
+                service.events().delete(calendarId, eventId).execute()
+                true
+            } catch (e: Exception) {
+                android.util.Log.d("VIGILSync", "deleteCalendarEvent failed: ${e.message}")
+                false
+            }
+        }
+    }
 }

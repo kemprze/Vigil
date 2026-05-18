@@ -41,6 +41,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -65,6 +66,7 @@ import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.ZoneId
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddTaskWizard(
     modifier: Modifier = Modifier,
@@ -507,12 +509,15 @@ fun WizardStepWhen(
                 }
             }
 
+            val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
             if (showTimePicker) {
                 ModalBottomSheet(
                     onDismissRequest = {
                         if (dueTimeHour == null) hasTime = false
                         showTimePicker = false
-                    }
+                    },
+                    sheetState = sheetState
                 ) {
                     Column(modifier = Modifier
                         .fillMaxWidth()
@@ -545,6 +550,7 @@ fun WizardStepWhen(
                             }
                             TextButton(onClick = {
                                 onTimeSet(timePickerState.hour, timePickerState.minute)
+                                showTimePicker = false
                             }) {
                                 Text(
                                     text = "Confirm",

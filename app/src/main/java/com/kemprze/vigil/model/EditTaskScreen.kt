@@ -3,6 +3,7 @@ package com.kemprze.vigil.model
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,6 +14,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.CalendarToday
+import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -20,19 +22,24 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TimePicker
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -61,6 +68,18 @@ fun EditTaskScreen(
     var dueDate by remember { mutableStateOf(task.dueDate) }
     var reminderOffset by remember { mutableStateOf(task.reminderOffset) }
 
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = dueDate?.toInstant(java.time.ZoneOffset.UTC)?.toEpochMilli()
+    )
+    var showDatePicker by remember { mutableStateOf(false) }
+    var showTimePicker by remember { mutableStateOf(false) }
+    var dueTimeHour by remember { mutableStateOf(task.dueDate?.hour) }
+    var dueTimeMinute by remember { mutableStateOf(task.dueDate?.minute) }
+    val timePickerState = rememberTimePickerState(
+        initialHour = dueTimeHour?: 12,
+        initialMinute = dueTimeMinute ?: 0
+    )
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -76,6 +95,7 @@ fun EditTaskScreen(
                 actions = {
                     TextButton(
                         onClick = {
+                            android.util.Log.d("VIGILEdit", "Save tapped")
                             tasksViewModel.onTaskUpdated(
                                 task.copy(
                                     taskName = taskName,
@@ -84,7 +104,10 @@ fun EditTaskScreen(
                                     category = category,
                                     duration = duration,
                                     dueDate = dueDate,
-                                    reminderOffset = reminderOffset
+                                    reminderOffset = reminderOffset,
+                                    googleCalendarEventId = task.googleCalendarEventId,
+                                    parentTaskId = task.parentTaskId,
+                                    subtaskOrder = task.subtaskOrder
                                 )
                             )
                             onNavigateBack()
@@ -180,11 +203,6 @@ fun EditTaskScreen(
                 color = MaterialTheme.colorScheme.primary
             )
 
-            val datePickerState = rememberDatePickerState(
-                initialSelectedDateMillis = dueDate?.toInstant(java.time.ZoneOffset.UTC)?.toEpochMilli()
-            )
-            var showDatePicker by remember { mutableStateOf(false) }
-
             if (showDatePicker) {
                 DatePickerDialog(
                     onDismissRequest = { showDatePicker = false },
@@ -192,7 +210,12 @@ fun EditTaskScreen(
                         TextButton(onClick = {
                             datePickerState.selectedDateMillis?.let {
                                 millis ->
-                                dueDate = java.time.Instant.ofEpochMilli(millis).atZone(java.time.ZoneId.systemDefault()).toLocalDateTime()
+                                val pickedDate = java.time.Instant.ofEpochMilli(millis)
+                                    .atZone(java.time.ZoneId.systemDefault())
+                                    .toLocalDate()
+
+                                val existingTime = dueDate?.toLocalTime() ?: java.time.LocalTime.MIDNIGHT
+                                dueDate = pickedDate.atTime(existingTime)
                             }
                             showDatePicker = false
                         }) { Text("OK") }
@@ -211,6 +234,72 @@ fun EditTaskScreen(
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(dueDate?.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)) ?: "No date set")
             }
+
+            val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+            OutlinedButton(
+                onClick = { showTimePicker = true},
+                modifier = Modifier.fillMaxWidth(),
+                enabled = dueDate != null
+            ) {
+                Icon(imageVector = Icons.Outlined.Schedule,
+                    contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    if (dueTimeHour != null && dueTimeMinute != null)
+                    "%02d:%02d".format(dueTimeHour, dueTimeMinute)
+                    else "No time set"
+                )
+            }
+
+            if (showTimePicker) {
+                ModalBottomSheet(
+                    onDismissRequest = { showTimePicker = false },
+                    sheetState = sheetState
+                ) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth().padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        Text(
+                            "Set time",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        TimePicker(state = timePickerState)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.End
+                        ) {
+                            TextButton(
+                                onClick = {
+                                    dueTimeHour = null
+                                    dueTimeMinute = null
+                                    dueDate = dueDate?.toLocalDate()?.atStartOfDay()
+                                    showTimePicker = false
+                                }
+                            ) {
+                                Text("Clear")
+                            }
+                            TextButton(
+                                onClick = {
+                                    dueTimeHour = timePickerState.hour
+                                    dueTimeMinute = timePickerState.minute
+                                    dueDate = dueDate?.toLocalDate()?.atTime(
+                                        dueTimeHour!!,
+                                        dueTimeMinute!!
+                                    )
+                                    showTimePicker = false
+                                }
+                            ) {
+                                Text("Confirm")
+                            }
+                        }
+                    }
+                }
+            }
+
             Text(
                 text = "Reminder",
                 style = MaterialTheme.typography.titleSmall,

@@ -48,7 +48,9 @@ class TasksViewModel(private val taskRepository: TaskRepository,
     }
 
     fun getTaskById(id: String): SimpleTask? {
-        return _allTasks.find { it.id == id }
+        val task = _allTasks.find { it.id == id }
+        android.util.Log.d("VIGILEdit", "getTaskById: eventId = ${task?.googleCalendarEventId}")
+        return task
     }
 
     private fun applyFilterAndUpdate() {
@@ -144,14 +146,40 @@ class TasksViewModel(private val taskRepository: TaskRepository,
     }
 
     fun onTaskUpdated(task: SimpleTask) {
+        android.util.Log.d("VIGILEdit", "onTaskUpdated called, eventId: ${task.googleCalendarEventId}")
         viewModelScope.launch {
             taskRepository.updateTask(task)
+
+            val context = getApplication<Application>()
+            val settingsDataStore = SettingsDataStore(context)
+            val calendarId = settingsDataStore.googleSyncFlow.first()
+            val eventId = task.googleCalendarEventId
+
+            android.util.Log.d("VIGILSync", "calendarId=$calendarId | eventId=$eventId | dueDate=${task.dueDate}")
+
+            if (calendarId != null && eventId != null && task.dueDate != null) {
+                eventId.let { id ->
+                    GoogleCalendarSync.updateCalendarEvent(context, task, calendarId,id)
+                }
+                android.util.Log.d("VIGILSync", "OnTaskUpdated fired")
+            }
         }
     }
 
     fun onTaskDeleted(task: SimpleTask) {
         viewModelScope.launch {
             taskRepository.deleteTask(task)
+
+            val context = getApplication<Application>()
+            val settingsDataStore = SettingsDataStore(context)
+            val calendarId = settingsDataStore.googleSyncFlow.first()
+            val eventId = task.googleCalendarEventId
+
+            if (calendarId != null && eventId != null) {
+                eventId.let { id ->
+                    GoogleCalendarSync.deleteCalendarEvent(context, calendarId, id)
+                }
+            }
         }
     }
 
