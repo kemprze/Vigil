@@ -16,6 +16,7 @@ import com.kemprze.vigil.data.model.SimpleTask
 import com.kemprze.vigil.data.model.SortOrder
 import com.kemprze.vigil.data.repository.TaskRepository
 import com.kemprze.vigil.sync.GoogleCalendarSync
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -69,10 +70,15 @@ class TasksViewModel(private val taskRepository: TaskRepository,
                 }
             }
 
+        val parentOnly = filtered.filter {
+            it.parentTaskId == null
+        }
+
         _uiState.update { currentState ->
             currentState.copy(
-                tasks = filtered.filter { !it.isCompleted },
+                tasks = parentOnly.filter { !it.isCompleted },
                 completedTasks = filtered.filter { it.isCompleted },
+                allTasks = _allTasks,
                 isLoading = false,
                 filterState = _currentFilter
             )
@@ -173,6 +179,27 @@ class TasksViewModel(private val taskRepository: TaskRepository,
                     GoogleCalendarSync.deleteCalendarEvent(context, calendarId, id)
                 }
             }
+        }
+    }
+
+    fun getSubtasksForTask(parentId: String): Flow<List<SimpleTask>> {
+        return taskRepository.getSubtasksForTask(parentId)
+    }
+
+    fun onSubtaskAdded(parentTask: SimpleTask, subtaskName: String) {
+        val subtaskOrder = _allTasks.count { it.parentTaskId == parentTask.id }
+
+        val subtask = SimpleTask(
+            taskName = subtaskName,
+            parentTaskId = parentTask.id,
+            subtaskOrder = subtaskOrder,
+            priority = parentTask.priority,
+            category = parentTask.category,
+            duration = Duration.SHORT
+        )
+
+        viewModelScope.launch {
+            taskRepository.insertTask(subtask)
         }
     }
 

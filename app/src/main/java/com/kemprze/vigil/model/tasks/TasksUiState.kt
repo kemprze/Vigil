@@ -6,6 +6,7 @@ import com.kemprze.vigil.data.model.SimpleTask
 data class TasksUiState(
     val tasks: List<SimpleTask> = emptyList(),
     val completedTasks: List<SimpleTask> = emptyList(),
+    val allTasks: List<SimpleTask> = emptyList(),
     val isLoading: Boolean = false,
     val filterState: FilterState = FilterState()
 )

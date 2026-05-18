@@ -9,6 +9,9 @@ interface TaskDao {
     @Query("SELECT * FROM tasks")
     fun getAllTasks(): Flow<List<SimpleTask>>
 
+    @Query("SELECT * FROM tasks WHERE parentTaskId = :parentId ORDER BY subtaskOrder ASC")
+    fun getSubtasksForTask(parentId: String): Flow<List<SimpleTask>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertTask(task: SimpleTask)
 

@@ -116,9 +116,11 @@ fun TaskScreen(
             currentListType = currentList,
             incompleteTasks = taskUiState.tasks,
             completeTasks = taskUiState.completedTasks,
+            allTasks = taskUiState.allTasks,
             onTaskCompleted = { task, isCompleted -> tasksViewModel.onTaskCompleted(task, isCompleted)},
             onTaskDeleted = { task -> tasksViewModel.onTaskDeleted(task) },
             onEditClick = onEditClick,
+            onSubtaskCompleted = { task, isCompleted -> tasksViewModel.onTaskCompleted(task, isCompleted) },
             modifier = modifier
                 .fillMaxSize()
                 .padding(innerPadding)
@@ -238,18 +240,22 @@ fun MainTaskScreenBottomAppBar(
 }
 
 @Composable
-fun TaskList(incompleteTasks: List<SimpleTask>,
-             completeTasks: List<SimpleTask>,
-             currentListType: ListTypes,
-             onTaskCompleted: (SimpleTask, Boolean) -> Unit,
-             onTaskDeleted: (SimpleTask) -> Unit,
-             onEditClick: (SimpleTask) -> Unit,
-             modifier: Modifier = Modifier) {
-
+fun TaskList(
+    currentListType: ListTypes,
+    incompleteTasks: List<SimpleTask>,
+    completeTasks: List<SimpleTask>,
+    allTasks: List<SimpleTask>,
+    onTaskCompleted: (SimpleTask, Boolean) -> Unit,
+    onTaskDeleted: (SimpleTask) -> Unit,
+    onEditClick: (SimpleTask) -> Unit,
+    onSubtaskCompleted: (SimpleTask, Boolean) -> Unit,
+    modifier: Modifier = Modifier
+) {
     val currentListItems = when (currentListType) {
         ListTypes.INCOMPLETE -> incompleteTasks
         ListTypes.COMPLETE -> completeTasks
     }
+
     if (currentListItems.isEmpty()) {
         val (icon, title, subtitle) = when (currentListType) {
             ListTypes.INCOMPLETE -> if (completeTasks.isEmpty())
@@ -271,9 +277,11 @@ fun TaskList(incompleteTasks: List<SimpleTask>,
     ) {
         items(currentListItems, key = {it.id}) {
             task -> TaskCard(task = task,
+            subtasks = allTasks.filter { it.parentTaskId == task.id },
             onTaskCompleted = onTaskCompleted,
             onTaskDeleted = onTaskDeleted,
             onEditClick = onEditClick,
+            onSubtaskCompleted = onSubtaskCompleted,
             modifier = Modifier.animateItem())
         }
     }

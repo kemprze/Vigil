@@ -9,6 +9,10 @@ class TaskRepository(private val taskDao: TaskDao) {
         return taskDao.getAllTasks()
     }
 
+    fun getSubtasksForTask(parentId: String): Flow<List<SimpleTask>> {
+        return taskDao.getSubtasksForTask(parentId)
+    }
+
     suspend fun insertTask(task: SimpleTask) {
         taskDao.insertTask(task)
     }

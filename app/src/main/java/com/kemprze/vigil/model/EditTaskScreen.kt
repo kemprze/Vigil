@@ -13,12 +13,15 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.outlined.CalendarToday
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -35,6 +38,7 @@ import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -314,6 +318,65 @@ fun EditTaskScreen(
                         onClick = { reminderOffset = if (reminderOffset == offset) null else offset },
                         label = { Text(offset.label) }
                     )
+                }
+            }
+
+            HorizontalDivider()
+            Text(
+                text = "Subtasks",
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.primary
+            )
+
+            val subtasks by tasksViewModel.getSubtasksForTask(task.id).collectAsState(
+                initial = emptyList()
+            )
+            var newSubtaskName by remember { mutableStateOf("") }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                OutlinedTextField(
+                    value = newSubtaskName,
+                    onValueChange = { newSubtaskName = it },
+                    label = { Text("New subtask") },
+                    modifier = Modifier.weight(1f),
+                    singleLine = true
+                )
+                IconButton(
+                    onClick = {
+                        if (newSubtaskName.isNotBlank()) {
+                            tasksViewModel.onSubtaskAdded(task, newSubtaskName)
+                        }
+                        newSubtaskName = ""
+                    }
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Add subtask")
+                }
+            }
+
+            subtasks.forEach {
+                subtask ->
+                Row(modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = subtask.taskName,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.weight(1f)
+                    )
+                    IconButton(
+                        onClick = {
+                            tasksViewModel.onTaskDeleted(subtask)
+                        }
+                    ) {
+                        Icon(
+                            Icons.Default.Close,
+                            contentDescription = "Remove subtask"
+                            )
+                    }
                 }
             }
         }
