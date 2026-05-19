@@ -17,7 +17,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.outlined.CalendarToday
@@ -28,6 +31,7 @@ import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
@@ -63,7 +67,6 @@ fun DetailsRow(dueDate: LocalDateTime?,
                priority: Priority,
                category: Category,
                duration: Duration,
-               onEditClick: () -> Unit,
                modifier: Modifier = Modifier) {
     val formatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
 
@@ -130,18 +133,6 @@ fun DetailsRow(dueDate: LocalDateTime?,
                 )
             }
         }
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.End
-        ) {
-            IconButton(onClick = onEditClick) {
-                Icon(
-                    imageVector = Icons.Default.Edit,
-                    contentDescription = "Edit task"
-                )
-            }
-        }
     }
 }
 
@@ -152,6 +143,8 @@ fun TaskCard(task: SimpleTask,
              onSubtaskCompleted: (SimpleTask, Boolean) -> Unit = { _, _ -> },
              onTaskDeleted: (SimpleTask) -> Unit,
              onEditClick: (SimpleTask) -> Unit,
+             onCompleteClick: () -> Unit,
+             onBreakdownClick: () -> Unit,
              modifier: Modifier = Modifier) {
     var details by remember { mutableStateOf(false) }
     val dismissState = rememberSwipeToDismissBoxState(
@@ -207,8 +200,7 @@ fun TaskCard(task: SimpleTask,
                 dueDate = task.dueDate,
                 category = task.category,
                 duration = task.duration,
-                priority = task.priority,
-                onEditClick = { onEditClick(task) }
+                priority = task.priority
             )
 
             if (details && subtasks.isNotEmpty()) {
@@ -227,7 +219,12 @@ fun TaskCard(task: SimpleTask,
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .height(24.dp)
-                                        .clickable { onSubtaskCompleted(subtask, !subtask.isCompleted) }
+                                        .clickable {
+                                            onSubtaskCompleted(
+                                                subtask,
+                                                !subtask.isCompleted
+                                            )
+                                        }
                                 ) {
                                     Canvas(
                                         modifier = Modifier.size(8.dp)
@@ -254,6 +251,53 @@ fun TaskCard(task: SimpleTask,
                                                 else MaterialTheme.colorScheme.onSurface
                                         )
                                 }
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        Surface(
+                            onClick = { onEditClick },
+                            shape = RoundedCornerShape(8.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant,
+                            modifier = Modifier.size(40.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.Default.Edit,
+                                    contentDescription = "Edit task",
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        }
+                        Surface(
+                            onClick = {  },
+                            shape = RoundedCornerShape(8.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant,
+                            modifier = Modifier.size(40.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.Default.AutoAwesome,
+                                    contentDescription = "Break down task",
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        }
+                        Surface(
+                            onClick = {  },
+                            shape = RoundedCornerShape(8.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant,
+                            modifier = Modifier.size(40.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.Default.CheckCircle,
+                                    contentDescription = "Complete task",
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -312,47 +356,3 @@ fun TaskCheckbox(modifier: Modifier = Modifier,
             )
     }
 }
-
-@Preview
-@Composable
-fun TaskCardPreview() {
-    val sampleTask = SimpleTask(
-        taskName = "Throw trash out",
-        taskDescription = "The trashcan is overflowing",
-        dueDate = LocalDateTime.of(2025, 12, 1, 12, 42),
-        category = Category.HOME,
-        createdOn = LocalDateTime.of(2024, 10, 12, 12, 47),
-        priority = Priority.NORMAL,
-        isCompleted = false
-    )
-    TODOPrototypingTheme {
-        TaskCard(
-                sampleTask,
-        onTaskCompleted = {_, _ -> },
-            onTaskDeleted = { },
-            onEditClick = { }
-        )
-    }
-}
-
-@Preview
-@Composable
-fun TaskCardPreviewDark() {
-    val sampleTask = SimpleTask(
-        taskName = "Throw trash out",
-        taskDescription = "The trashcan is overflowing",
-        dueDate = LocalDateTime.of(2025, 12, 1, 12, 42),
-        category = Category.HOME,
-        createdOn = LocalDateTime.of(2024, 10, 12, 12, 47),
-        priority = Priority.NORMAL,
-        isCompleted = false
-    )
-    TODOPrototypingTheme(darkTheme = true) {
-        TaskCard(
-            sampleTask,
-            onTaskCompleted = {_, _ -> },
-            onTaskDeleted = {},
-            onEditClick = { }
-        )
-    }
-    }

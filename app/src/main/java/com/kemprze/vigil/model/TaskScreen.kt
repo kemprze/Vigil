@@ -198,7 +198,8 @@ fun MainTaskScreenBottomAppBar(
         actions = {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = modifier.padding(start = 8.dp)
+                modifier = modifier
+                    .padding(start = 8.dp)
                     .clickable(onClick = onCalendarClick)
             ) {
                 Icon(
@@ -214,7 +215,9 @@ fun MainTaskScreenBottomAppBar(
             }
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.padding(start = 8.dp).clickable(onClick = onStatsClick)
+                modifier = Modifier
+                    .padding(start = 8.dp)
+                    .clickable(onClick = onStatsClick)
             ) {
                 Icon(Icons.Outlined.BarChart, contentDescription = "Stats view")
                 Spacer(modifier = Modifier.height(4.dp))
@@ -276,13 +279,17 @@ fun TaskList(
         modifier = modifier
     ) {
         items(currentListItems, key = {it.id}) {
-            task -> TaskCard(task = task,
+            task -> TaskCard(
+            task = task,
             subtasks = allTasks.filter { it.parentTaskId == task.id },
             onTaskCompleted = onTaskCompleted,
             onTaskDeleted = onTaskDeleted,
             onEditClick = onEditClick,
             onSubtaskCompleted = onSubtaskCompleted,
-            modifier = Modifier.animateItem())
+            modifier = Modifier.animateItem(),
+            onCompleteClick = { },
+            onBreakdownClick = {  }
+        )
         }
     }
 }

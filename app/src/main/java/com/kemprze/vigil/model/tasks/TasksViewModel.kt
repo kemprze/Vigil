@@ -77,7 +77,7 @@ class TasksViewModel(private val taskRepository: TaskRepository,
         _uiState.update { currentState ->
             currentState.copy(
                 tasks = parentOnly.filter { !it.isCompleted },
-                completedTasks = filtered.filter { it.isCompleted },
+                completedTasks = parentOnly.filter { it.isCompleted },
                 allTasks = _allTasks,
                 isLoading = false,
                 filterState = _currentFilter

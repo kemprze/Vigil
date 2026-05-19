@@ -166,8 +166,13 @@ fun CalendarScreen(
                         TaskCard(
                             task = task,
                             onTaskCompleted = { _, _ -> },
-                            onTaskDeleted = {},
-                            onEditClick = {}
+                            onTaskDeleted = { _ -> },
+                            onEditClick = { _ -> },
+                            onBreakdownClick = { },
+                            subtasks = emptyList(),
+                            onSubtaskCompleted = { _, _ -> },
+                            onCompleteClick = { },
+                            modifier = Modifier,
                         )
                     }
                 }
@@ -257,7 +262,8 @@ private fun DayCell(
                     .padding(horizontal = 1.dp)
                     .size(5.dp)
                     .clip(CircleShape)
-                    .background(category.color
+                    .background(
+                        category.color
                     )
                 )
             }
