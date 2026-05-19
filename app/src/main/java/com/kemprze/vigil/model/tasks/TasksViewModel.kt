@@ -148,6 +148,19 @@ class TasksViewModel(private val taskRepository: TaskRepository,
     fun onTaskCompleted(task: SimpleTask, isCompleted: Boolean) {
         viewModelScope.launch {
             taskRepository.updateTask(task.copy(isCompleted = isCompleted))
+
+
+        val parentId = task.parentTaskId ?: return@launch
+        val siblings = _allTasks.filter {
+            it.parentTaskId == parentId
+        }
+
+        val allDone = siblings.all {
+            if (it.id == task.id) isCompleted else it.isCompleted
+        }
+
+        val parent = _allTasks.find { it.id == parentId } ?: return@launch
+        taskRepository.updateTask(parent.copy(isCompleted = allDone))
         }
     }
 
