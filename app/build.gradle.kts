@@ -73,6 +73,7 @@ dependencies {
     implementation("com.google.android.gms:play-services-auth:21.0.0")
     implementation("com.google.api-client:google-api-client-android:2.2.0")
     implementation("com.google.apis:google-api-services-calendar:v3-rev20231123-2.0.0")
+    implementation("com.google.ai.edge.litertlm:litertlm-android:latest.release")
     ksp(libs.room.compiler)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

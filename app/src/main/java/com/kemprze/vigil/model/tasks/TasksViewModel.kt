@@ -89,6 +89,7 @@ class TasksViewModel(private val taskRepository: TaskRepository,
         _currentFilter = filterState
         applyFilterAndUpdate()
     }
+
     fun onTaskAdded(taskName: String,
                     taskDescription: String,
                     priority: Priority,

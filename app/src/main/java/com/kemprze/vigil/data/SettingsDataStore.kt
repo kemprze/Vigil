@@ -21,6 +21,8 @@ class SettingsDataStore(private val context: Context) {
         val IS_DARK_MODE = stringPreferencesKey("is_dark_mode")
         val IS_DYNAMIC_COLOR = booleanPreferencesKey("is_dynamic_color")
         val GOOGLE_CALENDAR_SYNC_ID = stringPreferencesKey("google_calendar_id")
+        val AI_OPT_IN = booleanPreferencesKey("ai_opt_in")
+        val AI_MODEL_READY = booleanPreferencesKey("ai_model_ready")
     }
 
     val themeFlow: Flow<AppTheme> = context.dataStore.data.map {
@@ -45,6 +47,14 @@ class SettingsDataStore(private val context: Context) {
 
     val googleSyncFlow: Flow<String?> = context.dataStore.data.map {
         prefs -> prefs[GOOGLE_CALENDAR_SYNC_ID]
+    }
+
+    val aiOptInFlow: Flow<Boolean?> = context.dataStore.data.map {
+        prefs -> prefs[AI_OPT_IN]  ?: false
+    }
+
+    val aiModelReady: Flow<Boolean?> = context.dataStore.data.map {
+        prefs -> prefs[AI_MODEL_READY] ?: false
     }
 
     suspend fun saveTheme(theme: AppTheme) {
@@ -74,5 +84,22 @@ class SettingsDataStore(private val context: Context) {
             prefs ->
             prefs.remove(GOOGLE_CALENDAR_SYNC_ID)
         }
+    }
+
+    suspend fun saveAiOptIn(isEnabled: Boolean) {
+        context.dataStore.edit { prefs -> prefs[AI_OPT_IN] = isEnabled}
+    }
+
+    suspend fun saveAiModelReady(isReady: Boolean) {
+        context.dataStore.edit {
+            prefs -> prefs[AI_MODEL_READY] = isReady
+        }
+    }
+
+    suspend fun clearAiModel(context: Context) {
+        saveAiModelReady(false)
+        saveAiOptIn(false)
+
+        // to add file deletion once the model path is known
     }
 }
