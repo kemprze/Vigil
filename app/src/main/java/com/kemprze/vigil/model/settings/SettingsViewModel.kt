@@ -3,10 +3,17 @@ package com.kemprze.vigil.model.settings
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.workDataOf
+import com.kemprze.vigil.ai.DownloadModelWorker
 import com.kemprze.vigil.data.DarkModePreferences
 import com.kemprze.vigil.data.SettingsDataStore
 import com.kemprze.vigil.ui.theme.AppFont
 import com.kemprze.vigil.ui.theme.AppTheme
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 class SettingsViewModel(application: Application) : AndroidViewModel(application) {
@@ -19,6 +26,49 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     val googleSyncFlow = settingsDataStore.googleSyncFlow
     val aiOptInFlow = settingsDataStore.aiOptInFlow
     val aiModelReadyFlow = settingsDataStore.aiModelReadyFlow
+    val aiModelVariantFlow = settingsDataStore.aiModelVariantFlow
+    val downloadProgressFlow = WorkManager.getInstance(getApplication())
+        .getWorkInfosByTagFlow("download_model")
+        .map {
+            workInfos ->
+            val info = workInfos.firstOrNull()
+
+            when {
+                info == null -> -1
+                info.state.isFinished -> -1
+                else ->
+                    info.progress.getInt(DownloadModelWorker.KEY_PROGRESS, 0)
+            }
+        }
+
+    init {
+        viewModelScope.launch {
+            aiOptInFlow.collect {
+                optedIn ->
+                if (optedIn == true) {
+                    val variant = settingsDataStore.aiModelVariantFlow.first()
+                    val file = DownloadModelWorker.modelFile(getApplication(), variant)
+
+                    if (file.exists()) {
+                            settingsDataStore.saveAiModelReady(true)
+                    } else {
+                        val workRequest = OneTimeWorkRequestBuilder<DownloadModelWorker>()
+                            .setInputData(workDataOf(DownloadModelWorker.KEY_VARIANT to variant))
+                            .addTag("download_model")
+                            .build()
+
+                        WorkManager.getInstance(getApplication())
+                            .enqueueUniqueWork(
+                                "download_model",
+                                ExistingWorkPolicy.KEEP,
+                                workRequest
+                            )
+
+                    }
+                }
+            }
+        }
+    }
 
     fun saveTheme(theme: AppTheme) {
         viewModelScope.launch {
@@ -64,6 +114,12 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     fun saveAiModelReady(isReady: Boolean) {
         viewModelScope.launch {
             settingsDataStore.saveAiModelReady(isReady)
+        }
+    }
+
+    fun saveSelectedModelVariant(variant: String) {
+        viewModelScope.launch {
+            settingsDataStore.saveAiModelVariant(variant)
         }
     }
 

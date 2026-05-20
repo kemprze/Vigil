@@ -6,6 +6,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.work.Data
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
+import com.kemprze.vigil.ai.DownloadModelWorker
+import com.kemprze.vigil.ai.LocalInferenceEngine
 import com.kemprze.vigil.data.SettingsDataStore
 import com.kemprze.vigil.data.model.Category
 import com.kemprze.vigil.data.model.Duration
@@ -35,6 +37,15 @@ class TasksViewModel(private val taskRepository: TaskRepository,
     private var _currentFilter: FilterState = FilterState()
     private val settingsDataStore = SettingsDataStore(getApplication())
     private val context = getApplication<Application>()
+    private val inferenceEngine = LocalInferenceEngine(getApplication())
+    private val _suggestedSubtasks = MutableStateFlow<List<String>>(emptyList())
+    val suggestedSubtasks = _suggestedSubtasks.asStateFlow()
+    private val _isBreakingDown = MutableStateFlow(false)
+    val isBreakingDown = _isBreakingDown.asStateFlow()
+    private val _currentBreakdownTask = MutableStateFlow<SimpleTask?>(null)
+    val currentBreakdownTask = _currentBreakdownTask.asStateFlow()
+
+
     val uiState: StateFlow<TasksUiState> = _uiState.asStateFlow()
 
     init {
@@ -215,6 +226,27 @@ class TasksViewModel(private val taskRepository: TaskRepository,
         viewModelScope.launch {
             taskRepository.insertTask(subtask)
         }
+    }
+
+    fun breakdownTask(task: SimpleTask) {
+        android.util.Log.d("InferenceEngine", "breakdownTask called for: ${task.taskName}")
+        _currentBreakdownTask.value = task
+        viewModelScope.launch {
+            _isBreakingDown.value = true
+            val variant = settingsDataStore.aiModelVariantFlow.first()
+            val modelPath = DownloadModelWorker.modelFile(getApplication(),variant).absolutePath
+
+            if (!inferenceEngine.isReady()) {
+                inferenceEngine.initialize(modelPath)
+            }
+
+            _suggestedSubtasks.value = inferenceEngine.suggestSubtasks(task.taskName, task.taskDescription)
+            _isBreakingDown.value = false
+        }
+    }
+
+    fun clearSuggestedSubtasks() {
+        _suggestedSubtasks.value = emptyList()
     }
 
 }

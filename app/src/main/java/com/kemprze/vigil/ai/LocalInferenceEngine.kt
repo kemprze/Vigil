@@ -14,19 +14,21 @@ import kotlinx.coroutines.withContext
 
 class LocalInferenceEngine(private val context: Context) {
     private var engine: Engine? = null
-    private fun isReady(): Boolean = engine != null
+    fun isReady(): Boolean = engine != null
 
     suspend fun initialize(modelPath: String) {
+        android.util.Log.d("InferenceEngine", "Initializing model from $modelPath")
         withContext(Dispatchers.IO) {
             val engineConfig = EngineConfig(
                 modelPath = modelPath,
-                backend = Backend.GPU(),
+                backend = Backend.CPU(),
                 cacheDir = context.cacheDir.path
             )
 
             engine = Engine(engineConfig)
             engine?.initialize()
         }
+        android.util.Log.d("InferenceEngine", "Model ready!")
     }
 
     suspend fun suggestSubtasks(

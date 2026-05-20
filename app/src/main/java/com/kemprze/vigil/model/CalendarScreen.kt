@@ -171,7 +171,6 @@ fun CalendarScreen(
                             onBreakdownClick = { },
                             subtasks = emptyList(),
                             onSubtaskCompleted = { _, _ -> },
-                            onCompleteClick = { },
                             modifier = Modifier,
                         )
                     }

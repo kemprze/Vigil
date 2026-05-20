@@ -3,6 +3,7 @@ package com.kemprze.vigil.model.settings
 import android.R.attr.content
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -26,7 +27,9 @@ import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
@@ -99,6 +102,9 @@ fun SettingsScreen(
         initial = false
     )
     var showAiPrivacyDialog by remember { mutableStateOf(false) }
+    var selectedModelVariant by remember { mutableStateOf("E2B") }
+    val aiModelVariant by settingsViewModel.aiModelVariantFlow.collectAsState(initial = "E2B")
+    val downloadProgress by settingsViewModel.downloadProgressFlow.collectAsState(initial = -1)
 
 
     if (showPrivacyDialog) {
@@ -261,13 +267,56 @@ fun SettingsScreen(
                     AlertDialog(
                         onDismissRequest = { showAiPrivacyDialog = false },
                         title = { Text("Before you enable AI features ") },
-                        text = { Text("This will download a language model (~1.5GB) to your device. " +
+                        text = {
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                            Text("This will download a language model (~2-3GB) to your device. " +
                                 "The model runs fully offline — your tasks never leave your phone. " +
-                                "You can disable and remove the model at any time from Settings.") },
+                                "You can disable and remove the model at any time from Settings.")
+                            HorizontalDivider()
+                                Text(
+                                    text = "Choose model",
+                                    style = MaterialTheme.typography.titleSmall
+                                )
+                                listOf(
+                                    Triple("E2B", "Fast · ~2GB", "Recommended for task breakdown"),
+                                    Triple("E4B", "Quality · ~3GB", "Better reasoning, uses more storage")
+                                ).forEach { (variant, label, description) ->
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable {
+                                                selectedModelVariant = variant
+                                            }
+                                            .padding(
+                                                vertical = 2.dp
+                                            ),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                    ) {
+                                        RadioButton(
+                                            selected = selectedModelVariant == variant,
+                                            onClick = { selectedModelVariant = variant }
+                                        )
+                                        Column {
+                                            Text(label, style = MaterialTheme.typography.bodyLarge)
+                                            Text(
+                                                description,
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.outline
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
+                               },
                         confirmButton = { TextButton(
                             onClick = {
                                 showAiPrivacyDialog = false
                                 settingsViewModel.saveAiOptIn(true)
+                                settingsViewModel.saveSelectedModelVariant(selectedModelVariant)
                             }
                         ) {
                             Text("I understand, enable")
@@ -297,7 +346,7 @@ fun SettingsScreen(
                         )
                         Text(
                             text = when {
-                                aiModelReady!! -> "Ready"
+                                aiModelReady!! -> "Ready · $aiModelVariant"
                                     aiOptIn!! -> "Downloading model"
                                     else -> "Not enabled"
                             },
@@ -321,6 +370,14 @@ fun SettingsScreen(
                     ) {
                         Text(if (aiOptIn!!) "Disable" else "Enable")
                     }
+
+
+                }
+                if (downloadProgress >= 0) {
+                    LinearProgressIndicator(
+                        progress = { downloadProgress / 100f},
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
             }
         }

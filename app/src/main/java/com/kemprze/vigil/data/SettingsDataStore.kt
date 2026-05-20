@@ -22,6 +22,7 @@ class SettingsDataStore(private val context: Context) {
         val IS_DYNAMIC_COLOR = booleanPreferencesKey("is_dynamic_color")
         val GOOGLE_CALENDAR_SYNC_ID = stringPreferencesKey("google_calendar_id")
         val AI_OPT_IN = booleanPreferencesKey("ai_opt_in")
+        val AI_MODEL_VARIANT = stringPreferencesKey("ai_model_variant")
         val AI_MODEL_READY = booleanPreferencesKey("ai_model_ready")
     }
 
@@ -51,6 +52,10 @@ class SettingsDataStore(private val context: Context) {
 
     val aiOptInFlow: Flow<Boolean?> = context.dataStore.data.map {
         prefs -> prefs[AI_OPT_IN]  ?: false
+    }
+
+    val aiModelVariantFlow: Flow<String> = context.dataStore.data.map {
+        prefs -> prefs[AI_MODEL_VARIANT] ?: "E2B"
     }
 
     val aiModelReadyFlow: Flow<Boolean?> = context.dataStore.data.map {
@@ -96,10 +101,16 @@ class SettingsDataStore(private val context: Context) {
         }
     }
 
-    suspend fun clearAiModel(context: Context) {
+    suspend fun clearAiModel() {
         saveAiModelReady(false)
         saveAiOptIn(false)
 
         // to add file deletion once the model path is known
+    }
+
+    suspend fun saveAiModelVariant(aiModelVariant: String) {
+        context.dataStore.edit {
+            prefs -> prefs[AI_MODEL_VARIANT] = aiModelVariant
+        }
     }
 }

@@ -39,6 +39,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -77,6 +78,8 @@ fun TaskScreen(
     val taskUiState by tasksViewModel.uiState.collectAsState()
     var currentList by remember { mutableStateOf(ListTypes.INCOMPLETE) }
     var showFilterSheet by remember { mutableStateOf(false) }
+    val suggestedSubtasks by tasksViewModel.suggestedSubtasks.collectAsState()
+    val isBreakingDown by tasksViewModel.isBreakingDown.collectAsState()
 
     if (showFilterSheet) {
         ModalBottomSheet(
@@ -121,10 +124,65 @@ fun TaskScreen(
             onTaskDeleted = { task -> tasksViewModel.onTaskDeleted(task) },
             onEditClick = onEditClick,
             onSubtaskCompleted = { task, isCompleted -> tasksViewModel.onTaskCompleted(task, isCompleted) },
+            onBreakdownClick = { task -> tasksViewModel.breakdownTask(task)},
             modifier = modifier
                 .fillMaxSize()
                 .padding(innerPadding)
         )
+
+        if (suggestedSubtasks.isNotEmpty()) {
+            ModalBottomSheet(
+                onDismissRequest = { tasksViewModel.clearSuggestedSubtasks() },
+                sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(24.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Text(
+                        text = "Suggested subtasks",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary
+                        )
+                    suggestedSubtasks.forEach {
+                        subtask ->
+                        Text(
+                            text = "• $subtask",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        TextButton(
+                            onClick = {
+                                tasksViewModel.clearSuggestedSubtasks()
+                            }
+                        ) {
+                            Text("Dismiss")
+                        }
+                        TextButton(
+                            onClick = {
+                                val task = tasksViewModel.currentBreakdownTask.value
+
+                                if (task != null) {
+                                    suggestedSubtasks.forEach {
+                                        subtaskName ->
+                                        tasksViewModel.onSubtaskAdded(task, subtaskName)
+                                    }
+                                }
+                                tasksViewModel.clearSuggestedSubtasks()
+                            }
+                        ) {
+                            Text("Add all")
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -252,6 +310,7 @@ fun TaskList(
     onTaskDeleted: (SimpleTask) -> Unit,
     onEditClick: (SimpleTask) -> Unit,
     onSubtaskCompleted: (SimpleTask, Boolean) -> Unit,
+    onBreakdownClick: (SimpleTask) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val currentListItems = when (currentListType) {
@@ -287,8 +346,7 @@ fun TaskList(
             onEditClick = onEditClick,
             onSubtaskCompleted = onSubtaskCompleted,
             modifier = Modifier.animateItem(),
-            onCompleteClick = { },
-            onBreakdownClick = {  }
+            onBreakdownClick = { onBreakdownClick(task) }
         )
         }
     }

@@ -143,8 +143,7 @@ fun TaskCard(task: SimpleTask,
              onSubtaskCompleted: (SimpleTask, Boolean) -> Unit = { _, _ -> },
              onTaskDeleted: (SimpleTask) -> Unit,
              onEditClick: (SimpleTask) -> Unit,
-             onCompleteClick: () -> Unit,
-             onBreakdownClick: () -> Unit,
+             onBreakdownClick: (SimpleTask) -> Unit,
              modifier: Modifier = Modifier) {
     var details by remember { mutableStateOf(false) }
     val dismissState = rememberSwipeToDismissBoxState(
@@ -203,7 +202,7 @@ fun TaskCard(task: SimpleTask,
                 priority = task.priority
             )
 
-            if (details && subtasks.isNotEmpty()) {
+            if (details) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -257,7 +256,7 @@ fun TaskCard(task: SimpleTask,
                         horizontalArrangement = Arrangement.End
                     ) {
                         Surface(
-                            onClick = { onEditClick },
+                            onClick = { onEditClick(task) },
                             shape = RoundedCornerShape(8.dp),
                             color = MaterialTheme.colorScheme.surfaceVariant,
                             modifier = Modifier.size(40.dp)
@@ -271,7 +270,7 @@ fun TaskCard(task: SimpleTask,
                             }
                         }
                         Surface(
-                            onClick = {  },
+                            onClick = { onBreakdownClick(task) },
                             shape = RoundedCornerShape(8.dp),
                             color = MaterialTheme.colorScheme.surfaceVariant,
                             modifier = Modifier.size(40.dp)
@@ -285,7 +284,7 @@ fun TaskCard(task: SimpleTask,
                             }
                         }
                         Surface(
-                            onClick = {  },
+                            onClick = { },
                             shape = RoundedCornerShape(8.dp),
                             color = MaterialTheme.colorScheme.surfaceVariant,
                             modifier = Modifier.size(40.dp)
