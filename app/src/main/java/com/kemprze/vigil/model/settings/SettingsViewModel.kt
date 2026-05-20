@@ -17,6 +17,8 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     val darkModeFlow = settingsDataStore.darkModeFlow
     val dynamicColorFlow = settingsDataStore.dynamicColorFlow
     val googleSyncFlow = settingsDataStore.googleSyncFlow
+    val aiOptInFlow = settingsDataStore.aiOptInFlow
+    val aiModelReadyFlow = settingsDataStore.aiModelReadyFlow
 
     fun saveTheme(theme: AppTheme) {
         viewModelScope.launch {
@@ -50,6 +52,18 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     fun clearGoogleCalendarId() {
         viewModelScope.launch {
             settingsDataStore.clearGoogleSync()
+        }
+    }
+
+    fun saveAiOptIn(isEnabled: Boolean) {
+        viewModelScope.launch {
+            settingsDataStore.saveAiOptIn(isEnabled)
+        }
+    }
+
+    fun saveAiModelReady(isReady: Boolean) {
+        viewModelScope.launch {
+            settingsDataStore.saveAiModelReady(isReady)
         }
     }
 

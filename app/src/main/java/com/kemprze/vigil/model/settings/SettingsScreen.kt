@@ -1,5 +1,6 @@
 package com.kemprze.vigil.model.settings
 
+import android.R.attr.content
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -12,9 +13,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -44,6 +48,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.DialogProperties
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.common.api.ApiException
 import com.kemprze.vigil.data.DarkModePreferences
@@ -87,6 +92,13 @@ fun SettingsScreen(
             isConnected = false
         }
     }
+    val aiOptIn by settingsViewModel.aiOptInFlow.collectAsState(
+        initial = false
+    )
+    val aiModelReady by settingsViewModel.aiModelReadyFlow.collectAsState(
+        initial = false
+    )
+    var showAiPrivacyDialog by remember { mutableStateOf(false) }
 
 
     if (showPrivacyDialog) {
@@ -131,7 +143,8 @@ fun SettingsScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
-                    .padding(16.dp),
+                    .padding(16.dp)
+                    .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -200,7 +213,9 @@ fun SettingsScreen(
                         )
                     }
                 }
+
                 HorizontalDivider()
+
                 Text(
                     text = "Sync",
                     style = MaterialTheme.typography.titleMedium
@@ -234,6 +249,78 @@ fun SettingsScreen(
                         }
                                   },
                         content = { Text( if (isConnected) "Disconnect" else "Connect") })
+                }
+
+                HorizontalDivider()
+                Text(
+                    text = "AI Features",
+                    style = MaterialTheme.typography.titleMedium
+                )
+
+                if (showAiPrivacyDialog) {
+                    AlertDialog(
+                        onDismissRequest = { showAiPrivacyDialog = false },
+                        title = { Text("Before you enable AI features ") },
+                        text = { Text("This will download a language model (~1.5GB) to your device. " +
+                                "The model runs fully offline — your tasks never leave your phone. " +
+                                "You can disable and remove the model at any time from Settings.") },
+                        confirmButton = { TextButton(
+                            onClick = {
+                                showAiPrivacyDialog = false
+                                settingsViewModel.saveAiOptIn(true)
+                            }
+                        ) {
+                            Text("I understand, enable")
+                        }
+                        },
+                        dismissButton = {
+                            Button(
+                                onClick = {
+                                    showAiPrivacyDialog = false
+                                }
+                            ) {
+                                Text("Cancel")
+                            }
+                        }
+                    )
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(
+                            text = "On-device AI",
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                        Text(
+                            text = when {
+                                aiModelReady!! -> "Ready"
+                                    aiOptIn!! -> "Downloading model"
+                                    else -> "Not enabled"
+                            },
+                            style = MaterialTheme.typography.bodySmall,
+                            color = when {
+                                aiModelReady!! -> MaterialTheme.colorScheme.primary
+                                    aiOptIn!! -> MaterialTheme.colorScheme.secondary
+                                else -> MaterialTheme.colorScheme.outline
+                            }
+                        )
+                    }
+                    Button(
+                        onClick = {
+                            if (aiOptIn!!) {
+                                settingsViewModel.saveAiOptIn(false)
+                                settingsViewModel.saveAiModelReady(false)
+                                } else {
+                                    showAiPrivacyDialog = true
+                            }
+                        }
+                    ) {
+                        Text(if (aiOptIn!!) "Disable" else "Enable")
+                    }
                 }
             }
         }

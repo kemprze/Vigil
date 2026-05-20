@@ -53,7 +53,7 @@ class SettingsDataStore(private val context: Context) {
         prefs -> prefs[AI_OPT_IN]  ?: false
     }
 
-    val aiModelReady: Flow<Boolean?> = context.dataStore.data.map {
+    val aiModelReadyFlow: Flow<Boolean?> = context.dataStore.data.map {
         prefs -> prefs[AI_MODEL_READY] ?: false
     }
 
