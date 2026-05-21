@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
@@ -126,32 +127,39 @@ fun StatsScreen(
                 }
                 Column(
                     modifier = Modifier
-                        .fillMaxWidth()
+                        .fillMaxSize(),
+                    horizontalAlignment = Alignment.Start,
+                    verticalArrangement = Arrangement.Center
                 ) {
                     LaunchedEffect(Unit) {
                         tasksViewModel.generateInsight(tasks, completedTasks)
                     }
 
-                    HorizontalDivider()
+                    HorizontalDivider(
+                        modifier = Modifier.padding(top = 4.dp, bottom = 8.dp)
+                    )
                     Text(
                         text = "Your insights",
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onPrimaryContainer,
                         modifier = Modifier.padding(bottom = 4.dp)
                     )
-                    Box(
+                    Row(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(24.dp)
-                    ) {
+                            .fillMaxSize()
+                            .padding(24.dp),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+
+                    )   {
                         if (isGeneratingInsight) {
                             CircularProgressIndicator()
                         } else {
-                        Text(
-                            text = insight,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.outline
-                        )
+                            Text(
+                                text = insight,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.outline
+                            )
                     }
                 }
             }
