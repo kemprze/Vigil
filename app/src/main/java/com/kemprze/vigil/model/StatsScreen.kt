@@ -29,17 +29,21 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.sp
 import com.kemprze.vigil.data.model.Category
 import com.kemprze.vigil.data.model.SimpleTask
+import com.kemprze.vigil.model.tasks.TasksViewModel
 
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 fun StatsScreen(
+    tasksViewModel: TasksViewModel,
     tasks: List<SimpleTask>,
     completedTasks: List<SimpleTask>,
     onNavigateBack: () -> Unit
 ) {
     var showCompleted by remember { mutableStateOf(false) }
     val activeTasks = if (showCompleted) completedTasks else tasks
+    val insight by tasksViewModel.insight.collectAsState()
+    val isGeneratingInsight by tasksViewModel.isGeneratingInsight.collectAsState()
 
     val categoryCounts = remember (activeTasks) {
         Category.entries.map { category ->
@@ -68,56 +72,87 @@ fun StatsScreen(
         }
     ) {
         innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            SingleChoiceSegmentedButtonRow() {
-                SegmentedButton(
-                    selected = !showCompleted,
-                    onClick = { showCompleted = false},
-                    shape = SegmentedButtonDefaults.itemShape(0, 2),
-                    icon = { },
-                    label = { Text("Incomplete") }
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                SingleChoiceSegmentedButtonRow() {
+                    SegmentedButton(
+                        selected = !showCompleted,
+                        onClick = { showCompleted = false},
+                        shape = SegmentedButtonDefaults.itemShape(0, 2),
+                        icon = { },
+                        label = { Text("Incomplete") }
+                    )
+                    SegmentedButton(
+                        selected = showCompleted,
+                        onClick = { showCompleted = true},
+                        shape = SegmentedButtonDefaults.itemShape(1,2),
+                        icon = { },
+                        label = { Text("Complete") }
+                    )
+                }
+                Spacer(modifier = Modifier.height(24.dp))
+                DonutChart(
+                    categoryCounts = categoryCounts,
+                    total = total,
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
                 )
-                SegmentedButton(
-                    selected = showCompleted,
-                    onClick = { showCompleted = true},
-                    shape = SegmentedButtonDefaults.itemShape(1,2),
-                    icon = { },
-                    label = { Text("Complete") }
-                )
-            }
-            Spacer(modifier = Modifier.height(24.dp))
-            DonutChart(
-                categoryCounts = categoryCounts,
-                total = total,
-                modifier = Modifier.align(Alignment.CenterHorizontally)
-            )
-            Spacer(modifier = Modifier.height(24.dp))
-            categoryCounts.forEach { (category, count) ->
-                Row(modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 4.dp)
+                Spacer(modifier = Modifier.height(24.dp))
+                categoryCounts.forEach { (category, count) ->
+                    Row(modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp)
+                    ) {
+                        Box(modifier = Modifier
+                            .size(12.dp)
+                            .clip(CircleShape)
+                            .background(category.color))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = category.name.lowercase().replaceFirstChar { it.titlecase() },
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Text(
+                            text = "$count (${(count.toFloat() / total * 100).toInt()}%)",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.outline
+                        )
+                    }
+                }
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
                 ) {
-                    Box(modifier = Modifier
-                        .size(12.dp)
-                        .clip(CircleShape)
-                        .background(category.color))
-                    Spacer(modifier = Modifier.width(8.dp))
+                    LaunchedEffect(Unit) {
+                        tasksViewModel.generateInsight(tasks, completedTasks)
+                    }
+
+                    HorizontalDivider()
                     Text(
-                        text = category.name.lowercase().replaceFirstChar { it.titlecase() },
+                        text = "Your insights",
                         style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.weight(1f)
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.padding(bottom = 4.dp)
                     )
-                    Text(
-                        text = "$count (${(count.toFloat() / total * 100).toInt()}%)",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.outline
-                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(24.dp)
+                    ) {
+                        if (isGeneratingInsight) {
+                            CircularProgressIndicator()
+                        } else {
+                        Text(
+                            text = insight,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.outline
+                        )
+                    }
                 }
             }
         }

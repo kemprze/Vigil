@@ -143,7 +143,8 @@ fun AppNavigation(modifier: Modifier = Modifier,
         composable(route = Screen.StatsScreen.route) {
             StatsScreen(tasks = tasksViewModel.uiState.collectAsState().value.tasks,
                 completedTasks = tasksViewModel.uiState.collectAsState().value.completedTasks,
-                onNavigateBack = { navController.navigateUp() }
+                onNavigateBack = { navController.navigateUp() },
+                tasksViewModel = tasksViewModel
             )
         }
         composable(route = Screen.EditTaskScreen.route,

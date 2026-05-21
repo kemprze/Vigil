@@ -100,4 +100,31 @@ class LocalInferenceEngine(private val context: Context) {
         engine?.close()
         engine = null
     }
+
+    suspend fun generateInsight(total: Int, completed: Int, pending: Int, topCategory: String): String {
+        return withContext(Dispatchers.IO) {
+
+            val e = engine ?: return@withContext "No insights so far."
+
+            val conversationConfig = ConversationConfig(
+                systemInstruction = Contents.of("You are a productivity assistant. " +
+                        "The user has $total tasks: $completed completed and $pending pending. " +
+                        "Their most active category is $topCategory. Give a short, warm, encouraging " +
+                        "insight in 2-3 sentences. " +
+                        "If there are no tasks, give a warm encouraging message to get started."),
+                samplerConfig = SamplerConfig(topK = 40, topP = 0.95, temperature = 0.7)
+            )
+            var result = "NONE"
+            e.createConversation(conversationConfig).use {
+                    conversation ->
+                val prompt = "Based on the provided data, give me my productivity insights. " +
+                        "Focus on providing objective information, but remember about being positive. " +
+                        "Make the tone feel non-judgemental and supportive."
+                val message = conversation.sendMessage(prompt)
+                result = message.contents.toString().trim()
+            }
+
+            result
+        }
+    }
 }

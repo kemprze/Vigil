@@ -44,10 +44,11 @@ class TasksViewModel(private val taskRepository: TaskRepository,
     val isBreakingDown = _isBreakingDown.asStateFlow()
     private val _currentBreakdownTask = MutableStateFlow<SimpleTask?>(null)
     val currentBreakdownTask = _currentBreakdownTask.asStateFlow()
-    private var _isSuggestingCategory = MutableStateFlow(false)
-    val isSuggestingCategory = _isSuggestingCategory.asStateFlow()
-    private val _currentSuggestedCategory = MutableStateFlow(Category.NONE)
-    val currentSuggestedCategory = _currentSuggestedCategory.asStateFlow()
+    private var _insight = MutableStateFlow<String>("")
+    private val _isGeneratingInsight = MutableStateFlow<Boolean>(false)
+    val insight = _insight.asStateFlow()
+    val isGeneratingInsight = _isGeneratingInsight.asStateFlow()
+
 
 
     val uiState: StateFlow<TasksUiState> = _uiState.asStateFlow()
@@ -251,6 +252,30 @@ class TasksViewModel(private val taskRepository: TaskRepository,
 
             _suggestedSubtasks.value = inferenceEngine.suggestSubtasks(task.taskName, task.taskDescription)
             _isBreakingDown.value = false
+        }
+
+    }
+
+    fun generateInsight(tasks: List<SimpleTask>, completedTasks: List<SimpleTask>) {
+        val completedTasksCount = completedTasks.count()
+        val totalTasksCount = tasks.count() + completedTasks.count()
+        val incompleteTasksCount = tasks.count()
+
+        val topCategory = (tasks + completedTasks).groupBy { it.category }
+            .maxByOrNull { ( _, tasks ) -> tasks.size }
+            ?.key?.name ?: "None"
+
+        viewModelScope.launch {
+            _isGeneratingInsight.value = true
+            val variant = settingsDataStore.aiModelVariantFlow.first()
+            val modelPath = DownloadModelWorker.modelFile(getApplication(),variant).absolutePath
+
+            if (!inferenceEngine.isReady()) {
+                inferenceEngine.initialize(modelPath)
+            }
+
+            _insight.value = inferenceEngine.generateInsight(totalTasksCount, completedTasksCount, incompleteTasksCount, topCategory)
+            _isGeneratingInsight.value = false
         }
 
     }
