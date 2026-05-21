@@ -59,7 +59,7 @@ import com.kemprze.vigil.data.model.Duration
 import com.kemprze.vigil.data.model.FilterState
 import com.kemprze.vigil.data.model.Priority
 import com.kemprze.vigil.data.model.SortOrder
-import com.kemprze.vigil.data.model.SimpleTask
+import com.kemprze.vigil.data.model.Task
 import com.kemprze.vigil.model.tasks.TasksViewModel
 import com.kemprze.vigil.ui.theme.TODOPrototypingTheme
 
@@ -72,7 +72,7 @@ fun TaskScreen(
         onNavigateToSettings: () -> Unit,
         onCalendarClick: () -> Unit,
         onStatsClick: () -> Unit,
-        onEditClick: (SimpleTask) -> Unit
+        onEditClick: (Task) -> Unit
 ) {
 
     val taskUiState by tasksViewModel.uiState.collectAsState()
@@ -303,14 +303,14 @@ fun MainTaskScreenBottomAppBar(
 @Composable
 fun TaskList(
     currentListType: ListTypes,
-    incompleteTasks: List<SimpleTask>,
-    completeTasks: List<SimpleTask>,
-    allTasks: List<SimpleTask>,
-    onTaskCompleted: (SimpleTask, Boolean) -> Unit,
-    onTaskDeleted: (SimpleTask) -> Unit,
-    onEditClick: (SimpleTask) -> Unit,
-    onSubtaskCompleted: (SimpleTask, Boolean) -> Unit,
-    onBreakdownClick: (SimpleTask) -> Unit,
+    incompleteTasks: List<Task>,
+    completeTasks: List<Task>,
+    allTasks: List<Task>,
+    onTaskCompleted: (Task, Boolean) -> Unit,
+    onTaskDeleted: (Task) -> Unit,
+    onEditClick: (Task) -> Unit,
+    onSubtaskCompleted: (Task, Boolean) -> Unit,
+    onBreakdownClick: (Task) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val currentListItems = when (currentListType) {

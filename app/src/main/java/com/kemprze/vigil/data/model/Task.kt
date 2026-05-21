@@ -8,7 +8,7 @@ import java.util.UUID
 
 @Entity(tableName = "tasks")
 @TypeConverters(Converters::class)
-data class SimpleTask(
+data class Task(
     @PrimaryKey var id: String = UUID.randomUUID().toString(),
     var taskName: String,
     var taskDescription: String = "",

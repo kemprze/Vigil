@@ -8,9 +8,9 @@ import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.kemprze.vigil.data.model.Converters
-import com.kemprze.vigil.data.model.SimpleTask
+import com.kemprze.vigil.data.model.Task
 
-@Database(entities = [SimpleTask::class], version = 3, exportSchema = false)
+@Database(entities = [Task::class], version = 3, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class TaskDatabase : RoomDatabase() {
     abstract fun taskDao(): TaskDao

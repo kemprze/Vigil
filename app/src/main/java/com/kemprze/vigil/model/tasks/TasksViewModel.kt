@@ -14,7 +14,7 @@ import com.kemprze.vigil.data.model.Duration
 import com.kemprze.vigil.data.model.FilterState
 import com.kemprze.vigil.data.model.Priority
 import com.kemprze.vigil.data.model.ReminderWorker
-import com.kemprze.vigil.data.model.SimpleTask
+import com.kemprze.vigil.data.model.Task
 import com.kemprze.vigil.data.model.SortOrder
 import com.kemprze.vigil.data.repository.TaskRepository
 import com.kemprze.vigil.sync.GoogleCalendarSync
@@ -33,7 +33,7 @@ class TasksViewModel(private val taskRepository: TaskRepository,
                      application: Application
 ): AndroidViewModel(application) {
     private val _uiState = MutableStateFlow(TasksUiState())
-    private var _allTasks: List<SimpleTask> = emptyList()
+    private var _allTasks: List<Task> = emptyList()
     private var _currentFilter: FilterState = FilterState()
     private val settingsDataStore = SettingsDataStore(getApplication())
     private val context = getApplication<Application>()
@@ -42,7 +42,7 @@ class TasksViewModel(private val taskRepository: TaskRepository,
     val suggestedSubtasks = _suggestedSubtasks.asStateFlow()
     private val _isBreakingDown = MutableStateFlow(false)
     val isBreakingDown = _isBreakingDown.asStateFlow()
-    private val _currentBreakdownTask = MutableStateFlow<SimpleTask?>(null)
+    private val _currentBreakdownTask = MutableStateFlow<Task?>(null)
     val currentBreakdownTask = _currentBreakdownTask.asStateFlow()
     private var _insight = MutableStateFlow<String>("")
     private val _isGeneratingInsight = MutableStateFlow<Boolean>(false)
@@ -71,7 +71,7 @@ class TasksViewModel(private val taskRepository: TaskRepository,
         }
     }
 
-    fun getTaskById(id: String): SimpleTask? {
+    fun getTaskById(id: String): Task? {
         val task = _allTasks.find { it.id == id }
         return task
     }
@@ -120,7 +120,7 @@ class TasksViewModel(private val taskRepository: TaskRepository,
                     category: Category,
                     duration: Duration
     ) {
-        val newTask = SimpleTask(
+        val newTask = Task(
             taskName = taskName,
             taskDescription = taskDescription,
             priority = priority,
@@ -167,7 +167,7 @@ class TasksViewModel(private val taskRepository: TaskRepository,
         }
     }
 
-    fun onTaskCompleted(task: SimpleTask, isCompleted: Boolean) {
+    fun onTaskCompleted(task: Task, isCompleted: Boolean) {
         viewModelScope.launch {
             taskRepository.updateTask(task.copy(isCompleted = isCompleted))
 
@@ -186,7 +186,7 @@ class TasksViewModel(private val taskRepository: TaskRepository,
         }
     }
 
-    fun onTaskUpdated(task: SimpleTask) {
+    fun onTaskUpdated(task: Task) {
         viewModelScope.launch {
             taskRepository.updateTask(task)
 
@@ -202,7 +202,7 @@ class TasksViewModel(private val taskRepository: TaskRepository,
         }
     }
 
-    fun onTaskDeleted(task: SimpleTask) {
+    fun onTaskDeleted(task: Task) {
         viewModelScope.launch {
             taskRepository.deleteTask(task)
 
@@ -217,14 +217,14 @@ class TasksViewModel(private val taskRepository: TaskRepository,
         }
     }
 
-    fun getSubtasksForTask(parentId: String): Flow<List<SimpleTask>> {
+    fun getSubtasksForTask(parentId: String): Flow<List<Task>> {
         return taskRepository.getSubtasksForTask(parentId)
     }
 
-    fun onSubtaskAdded(parentTask: SimpleTask, subtaskName: String) {
+    fun onSubtaskAdded(parentTask: Task, subtaskName: String) {
         val subtaskOrder = _allTasks.count { it.parentTaskId == parentTask.id }
 
-        val subtask = SimpleTask(
+        val subtask = Task(
             taskName = subtaskName,
             parentTaskId = parentTask.id,
             subtaskOrder = subtaskOrder,
@@ -238,7 +238,7 @@ class TasksViewModel(private val taskRepository: TaskRepository,
         }
     }
 
-    fun breakdownTask(task: SimpleTask) {
+    fun breakdownTask(task: Task) {
         android.util.Log.d("InferenceEngine", "breakdownTask called for: ${task.taskName}")
         _currentBreakdownTask.value = task
         viewModelScope.launch {
@@ -256,7 +256,7 @@ class TasksViewModel(private val taskRepository: TaskRepository,
 
     }
 
-    fun generateInsight(tasks: List<SimpleTask>, completedTasks: List<SimpleTask>) {
+    fun generateInsight(tasks: List<Task>, completedTasks: List<Task>) {
         val completedTasksCount = completedTasks.count()
         val totalTasksCount = tasks.count() + completedTasks.count()
         val incompleteTasksCount = tasks.count()

@@ -26,7 +26,6 @@ import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -62,7 +61,7 @@ import com.kemprze.vigil.data.model.Category
 import com.kemprze.vigil.data.model.Duration
 import com.kemprze.vigil.data.model.Priority
 import com.kemprze.vigil.data.model.ReminderOffset
-import com.kemprze.vigil.data.model.SimpleTask
+import com.kemprze.vigil.data.model.Task
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.ZoneId
@@ -72,7 +71,7 @@ import java.time.ZoneId
 fun AddTaskWizard(
     modifier: Modifier = Modifier,
     onNavigateBack: () -> Unit,
-    onAddClick: (SimpleTask) -> Unit,
+    onAddClick: (Task) -> Unit,
     onSuggestCategory: suspend (String) -> Category
 ) {
     val pageCount = 5
@@ -93,7 +92,7 @@ fun AddTaskWizard(
     var showNameError by remember { mutableStateOf(false) }
     var autosuggestCategory by remember { mutableStateOf(false) }
 
-    fun buildTask() = SimpleTask(
+    fun buildTask() = Task(
         taskName = taskName,
         taskDescription = taskDescription,
         priority = priority,

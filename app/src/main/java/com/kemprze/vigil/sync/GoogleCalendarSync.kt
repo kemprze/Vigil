@@ -8,7 +8,7 @@ import android.content.Context
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
-import com.kemprze.vigil.data.model.SimpleTask
+import com.kemprze.vigil.data.model.Task
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -58,7 +58,7 @@ object GoogleCalendarSync {
         }
     }
 
-    suspend fun syncTaskToCalendar(context: Context, task: SimpleTask, calendarId: String): String? {
+    suspend fun syncTaskToCalendar(context: Context, task: Task, calendarId: String): String? {
         return withContext(Dispatchers.IO) {
             try {
                 val service = getCalendarService(context) ?: return@withContext null
@@ -101,7 +101,7 @@ object GoogleCalendarSync {
         }
     }
 
-    suspend fun updateCalendarEvent(context: Context, task: SimpleTask, calendarId: String, eventId: String): Boolean {
+    suspend fun updateCalendarEvent(context: Context, task: Task, calendarId: String, eventId: String): Boolean {
         return withContext(Dispatchers.IO) {
             try {
                 val service = getCalendarService(context) ?: return@withContext false

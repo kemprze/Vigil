@@ -29,7 +29,7 @@ import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.sp
 import com.kemprze.vigil.data.model.Category
-import com.kemprze.vigil.data.model.SimpleTask
+import com.kemprze.vigil.data.model.Task
 import com.kemprze.vigil.model.tasks.TasksViewModel
 
 
@@ -37,12 +37,12 @@ import com.kemprze.vigil.model.tasks.TasksViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 fun StatsScreen(
     tasksViewModel: TasksViewModel,
-    tasks: List<SimpleTask>,
-    completedTasks: List<SimpleTask>,
+    incompleteTasks: List<Task>,
+    completedTasks: List<Task>,
     onNavigateBack: () -> Unit
 ) {
     var showCompleted by remember { mutableStateOf(false) }
-    val activeTasks = if (showCompleted) completedTasks else tasks
+    val activeTasks = if (showCompleted) completedTasks else incompleteTasks
     val insight by tasksViewModel.insight.collectAsState()
     val isGeneratingInsight by tasksViewModel.isGeneratingInsight.collectAsState()
 
@@ -132,7 +132,7 @@ fun StatsScreen(
                     verticalArrangement = Arrangement.Center
                 ) {
                     LaunchedEffect(Unit) {
-                        tasksViewModel.generateInsight(tasks, completedTasks)
+                        tasksViewModel.generateInsight(incompleteTasks, completedTasks)
                     }
 
                     HorizontalDivider(
