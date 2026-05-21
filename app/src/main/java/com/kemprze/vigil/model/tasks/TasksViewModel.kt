@@ -56,6 +56,11 @@ class TasksViewModel(private val taskRepository: TaskRepository,
         loadTasks()
     }
 
+    override fun onCleared() {
+        super.onCleared()
+        inferenceEngine.close()
+    }
+
     private fun loadTasks() {
         viewModelScope.launch {
             taskRepository.getTasks().collect { allTasks ->
@@ -247,6 +252,7 @@ class TasksViewModel(private val taskRepository: TaskRepository,
             _suggestedSubtasks.value = inferenceEngine.suggestSubtasks(task.taskName, task.taskDescription)
             _isBreakingDown.value = false
         }
+
     }
 
     fun clearSuggestedSubtasks() {
@@ -259,9 +265,11 @@ class TasksViewModel(private val taskRepository: TaskRepository,
         if (!inferenceEngine.isReady()) {
             inferenceEngine.initialize(modelPath)
         }
-        return Category.entries.find {
+        val categorySuggested =  Category.entries.find {
             inferenceEngine.suggestCategory(taskName) == it.name
         } ?: Category.NONE
+
+        return categorySuggested
     }
 
 }
