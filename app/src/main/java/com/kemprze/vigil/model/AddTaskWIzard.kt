@@ -88,6 +88,7 @@ fun AddTaskWizard(
         mutableStateOf<ReminderOffset?>(null) }
     val scope = rememberCoroutineScope()
     var isSubmitting by remember { mutableStateOf(false) }
+    var showNameError by remember { mutableStateOf(false) }
 
     Scaffold(modifier) { innerPadding ->
         Column(
@@ -109,7 +110,10 @@ fun AddTaskWizard(
                 when (page) {
                     0 -> WizardStepName(
                         taskName = taskName,
-                        onTaskNameChange = { taskName = it }
+                        onTaskNameChange = { taskName = it },
+                        isError = taskName.isBlank(),
+                        showNameError = showNameError,
+                        onErrorCleared = { showNameError = false }
                     )
                     1 -> WizardStepDetails(
                         taskDescription = taskDescription,
@@ -171,7 +175,7 @@ fun AddTaskWizard(
                 }
 
                 // Skip button — hidden on last page
-                if (pagerState.currentPage < pageCount - 1) {
+                if (pagerState.currentPage > 0 && pagerState.currentPage < pageCount - 1) {
                     TextButton(onClick = {
                         scope.launch {
                             pagerState.animateScrollToPage(pagerState.currentPage + 1)
@@ -183,7 +187,11 @@ fun AddTaskWizard(
 
                 // Next / Confirm button
                 Button(onClick = {
-                    if (pagerState.currentPage < pageCount - 1) {
+                    if (pagerState.currentPage == 0 && taskName.isBlank()) {
+                        showNameError = true
+                        return@Button
+                    }
+                     else if (pagerState.currentPage < pageCount - 1) {
                         scope.launch {
                             pagerState.animateScrollToPage(pagerState.currentPage + 1)
                         }
@@ -228,6 +236,9 @@ fun AddTaskWizard(
 @Composable
 fun WizardStepName(
     taskName: String,
+    isError: Boolean,
+    showNameError: Boolean,
+    onErrorCleared: () -> Unit,
     onTaskNameChange: (String) -> Unit
 ) {
     Column(
@@ -259,7 +270,12 @@ fun WizardStepName(
         ) {
             OutlinedTextField(
                 value = taskName,
-                onValueChange = onTaskNameChange,
+                onValueChange = {
+                    onTaskNameChange(it)
+                    onErrorCleared()
+                                },
+                isError = isError,
+                supportingText = { if (showNameError) Text("Task name cannot be left empty") },
                 label = { Text("Task name") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
