@@ -150,7 +150,6 @@ fun StatsScreen(
                             .padding(24.dp),
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically
-
                     )   {
                         if (isGeneratingInsight) {
                             CircularProgressIndicator()

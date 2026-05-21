@@ -217,7 +217,7 @@ fun TaskCard(task: SimpleTask,
                                     verticalAlignment = Alignment.CenterVertically,
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .height(24.dp)
+                                        .padding(bottom = 4.dp)
                                         .clickable {
                                             onSubtaskCompleted(
                                                 subtask,
@@ -260,6 +260,7 @@ fun TaskCard(task: SimpleTask,
                             shape = RoundedCornerShape(8.dp),
                             color = MaterialTheme.colorScheme.surfaceVariant,
                             modifier = Modifier.size(40.dp)
+                                .padding(start = 4.dp)
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Icon(
@@ -274,6 +275,7 @@ fun TaskCard(task: SimpleTask,
                             shape = RoundedCornerShape(8.dp),
                             color = MaterialTheme.colorScheme.surfaceVariant,
                             modifier = Modifier.size(40.dp)
+                                .padding(start = 4.dp)
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Icon(
@@ -288,6 +290,7 @@ fun TaskCard(task: SimpleTask,
                             shape = RoundedCornerShape(8.dp),
                             color = MaterialTheme.colorScheme.surfaceVariant,
                             modifier = Modifier.size(40.dp)
+                                .padding(start = 4.dp)
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Icon(

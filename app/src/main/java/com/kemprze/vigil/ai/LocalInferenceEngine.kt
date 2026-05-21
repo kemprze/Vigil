@@ -19,14 +19,25 @@ class LocalInferenceEngine(private val context: Context) {
     suspend fun initialize(modelPath: String) {
         android.util.Log.d("InferenceEngine", "Initializing model from $modelPath")
         withContext(Dispatchers.IO) {
-            val engineConfig = EngineConfig(
-                modelPath = modelPath,
-                backend = Backend.CPU(),
-                cacheDir = context.cacheDir.path
-            )
+            val gpuEngine = try {
+                Engine(
+                    EngineConfig(
+                        modelPath = modelPath,
+                        backend = Backend.GPU(),
+                        cacheDir = context.cacheDir.path
+                    )
+                ).also { it.initialize() }
+            } catch (e: Exception) {
+                null
+            }
 
-            engine = Engine(engineConfig)
-            engine?.initialize()
+            engine = gpuEngine ?: Engine(
+                EngineConfig(
+                    modelPath = modelPath,
+                    backend = Backend.CPU(),
+                    cacheDir = context.cacheDir.path
+                )
+            ).also { it.initialize() }
         }
         android.util.Log.d("InferenceEngine", "Model ready!")
     }
