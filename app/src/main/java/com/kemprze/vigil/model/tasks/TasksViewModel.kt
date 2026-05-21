@@ -44,6 +44,10 @@ class TasksViewModel(private val taskRepository: TaskRepository,
     val isBreakingDown = _isBreakingDown.asStateFlow()
     private val _currentBreakdownTask = MutableStateFlow<SimpleTask?>(null)
     val currentBreakdownTask = _currentBreakdownTask.asStateFlow()
+    private var _isSuggestingCategory = MutableStateFlow(false)
+    val isSuggestingCategory = _isSuggestingCategory.asStateFlow()
+    private val _currentSuggestedCategory = MutableStateFlow(Category.NONE)
+    val currentSuggestedCategory = _currentSuggestedCategory.asStateFlow()
 
 
     val uiState: StateFlow<TasksUiState> = _uiState.asStateFlow()
@@ -247,6 +251,17 @@ class TasksViewModel(private val taskRepository: TaskRepository,
 
     fun clearSuggestedSubtasks() {
         _suggestedSubtasks.value = emptyList()
+    }
+
+    suspend fun suggestCategory(taskName: String): Category {
+        val variant = settingsDataStore.aiModelVariantFlow.first()
+        val modelPath = DownloadModelWorker.modelFile(getApplication(), variant).absolutePath
+        if (!inferenceEngine.isReady()) {
+            inferenceEngine.initialize(modelPath)
+        }
+        return Category.entries.find {
+            inferenceEngine.suggestCategory(taskName) == it.name
+        } ?: Category.NONE
     }
 
 }

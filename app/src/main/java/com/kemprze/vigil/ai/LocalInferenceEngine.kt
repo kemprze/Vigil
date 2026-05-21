@@ -60,6 +60,28 @@ class LocalInferenceEngine(private val context: Context) {
         }
     }
 
+    suspend fun suggestCategory(taskName: String): String {
+        return withContext(Dispatchers.IO) {
+            val e = engine ?: return@withContext "NONE"
+            val conversationConfig = ConversationConfig(
+                systemInstruction = Contents.of("You are a task classifier. " +
+                        "Reply with exactly one word."),
+                samplerConfig = SamplerConfig(topK = 1, topP = 1.0, temperature = 0.1)
+            )
+            var result = "NONE"
+            e.createConversation(conversationConfig).use {
+                conversation ->
+                val prompt = "Classify this task into exactly one of these categories: " +
+                        "WORK, PERSONAL, SHOPPING, HEALTH, HOME, EDUCATION, FINANCE, OTHER. " +
+                        "Reply with just the category case in uppercase, nothing else. Task: $taskName"
+                val message = conversation.sendMessage(prompt)
+                result = message.contents.toString().trim().uppercase()
+            }
+
+            result
+        }
+    }
+
 
 
     private fun parseSubtasks(response: String): List<String> {

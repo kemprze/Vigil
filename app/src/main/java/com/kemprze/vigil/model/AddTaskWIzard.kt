@@ -26,6 +26,7 @@ import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -71,7 +72,8 @@ import java.time.ZoneId
 fun AddTaskWizard(
     modifier: Modifier = Modifier,
     onNavigateBack: () -> Unit,
-    onAddClick: (SimpleTask) -> Unit
+    onAddClick: (SimpleTask) -> Unit,
+    onSuggestCategory: suspend (String) -> Category
 ) {
     val pageCount = 5
     val pagerState = rememberPagerState(initialPage = 0, pageCount = { 5 })
@@ -89,6 +91,31 @@ fun AddTaskWizard(
     val scope = rememberCoroutineScope()
     var isSubmitting by remember { mutableStateOf(false) }
     var showNameError by remember { mutableStateOf(false) }
+    var autosuggestCategory by remember { mutableStateOf(false) }
+
+    fun buildTask() = SimpleTask(
+        taskName = taskName,
+        taskDescription = taskDescription,
+        priority = priority,
+        category = category,
+        dueDate = dueDate?.let { millis ->
+            val date = Instant.ofEpochMilli(millis)
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate()
+            if (dueTimeHour != null && dueTimeMinute != null)
+                date.atTime(dueTimeHour!!, dueTimeMinute!!)
+            else
+                date.atStartOfDay()
+        },
+        needsReminder = needsReminder,
+        remindMe = dueDate?.let { millis ->
+            val due = Instant.ofEpochMilli(millis)
+                .atZone(ZoneId.systemDefault())
+                .toLocalDateTime()
+            reminderOffset?.calculateReminderTime(due)
+        },
+        duration = Duration.fromMinutes(duration)
+    )
 
     Scaffold(modifier) { innerPadding ->
         Column(
@@ -113,7 +140,9 @@ fun AddTaskWizard(
                         onTaskNameChange = { taskName = it },
                         isError = taskName.isBlank(),
                         showNameError = showNameError,
-                        onErrorCleared = { showNameError = false }
+                        onErrorCleared = { showNameError = false },
+                        autoSuggestCategory = autosuggestCategory,
+                        onAutoSuggestChange = { autosuggestCategory = it }
                     )
                     1 -> WizardStepDetails(
                         taskDescription = taskDescription,
@@ -175,13 +204,24 @@ fun AddTaskWizard(
                 }
 
                 // Skip button — hidden on last page
-                if (pagerState.currentPage > 0 && pagerState.currentPage < pageCount - 1) {
+                if (pagerState.currentPage < pageCount - 1) {
                     TextButton(onClick = {
-                        scope.launch {
-                            pagerState.animateScrollToPage(pagerState.currentPage + 1)
+                        if (taskName.isBlank()) {
+                            showNameError = true
+                            return@TextButton
+                        } else {
+                            if (!isSubmitting) {
+                                isSubmitting = true
+                                scope.launch {
+                                    val finalCategory = if (category == Category.NONE && autosuggestCategory) onSuggestCategory(taskName) else category
+                                    onAddClick(buildTask().copy(category = finalCategory))
+                                    isSubmitting = false
+                                }
+                            }
                         }
-                    }) {
-                        Text("Skip")
+                    },
+                        enabled = !isSubmitting) {
+                        Text("Save")
                     }
                 }
 
@@ -197,30 +237,12 @@ fun AddTaskWizard(
                         }
                     } else {
                         if (!isSubmitting) {
-                            val newTask = SimpleTask(
-                                taskName = taskName,
-                                taskDescription = taskDescription,
-                                priority = priority,
-                                category = category,
-                                dueDate = dueDate?.let { millis ->
-                                    val date = Instant.ofEpochMilli(millis)
-                                        .atZone(ZoneId.systemDefault())
-                                        .toLocalDate()
-                                    if (dueTimeHour != null && dueTimeMinute != null)
-                                        date.atTime(dueTimeHour!!, dueTimeMinute!!)
-                                    else
-                                        date.atStartOfDay()
-                                },
-                                needsReminder = needsReminder,
-                                remindMe = dueDate?.let { millis ->
-                                    val due = Instant.ofEpochMilli(millis)
-                                        .atZone(ZoneId.systemDefault())
-                                        .toLocalDateTime()
-                                    reminderOffset?.calculateReminderTime(due)
-                                },
-                                duration = Duration.fromMinutes(duration)
-                            )
-                            onAddClick(newTask)
+                            isSubmitting = true
+                            scope.launch {
+                                val finalCategory = if (category == Category.NONE && autosuggestCategory) onSuggestCategory(taskName) else category
+                                onAddClick(buildTask().copy(category = finalCategory))
+                                isSubmitting = false
+                            }
                         }
                     }
                 },
@@ -239,7 +261,9 @@ fun WizardStepName(
     isError: Boolean,
     showNameError: Boolean,
     onErrorCleared: () -> Unit,
-    onTaskNameChange: (String) -> Unit
+    onTaskNameChange: (String) -> Unit,
+    autoSuggestCategory: Boolean,
+    onAutoSuggestChange: (Boolean) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -281,6 +305,23 @@ fun WizardStepName(
                 singleLine = true
             )
         }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .padding(24.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "Autosuggest category?",
+                    color = MaterialTheme.colorScheme.onBackground,
+                    style = MaterialTheme.typography.bodyLarge
+                )
+                Switch(
+                    checked = autoSuggestCategory,
+                    onCheckedChange = onAutoSuggestChange
+                )
+            }
     }
 }
 

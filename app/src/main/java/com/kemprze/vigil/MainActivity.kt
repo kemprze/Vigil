@@ -124,7 +124,9 @@ fun AppNavigation(modifier: Modifier = Modifier,
                         duration = task.duration
                     )
                     navController.navigateUp()
-                })
+                },
+                onSuggestCategory = { name -> tasksViewModel.suggestCategory(name) }
+            )
         }
         composable(route = Screen.SettingsScreen.route) {
             SettingsScreen(
