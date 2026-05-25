@@ -1,6 +1,7 @@
 package com.kemprze.vigil.model.tasks
 
 import android.app.Application
+import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.work.Data
@@ -25,16 +26,21 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.concurrent.TimeUnit
 
-class TasksViewModel(private val taskRepository: TaskRepository,
-                     application: Application
-): AndroidViewModel(application) {
+class TasksViewModel(
+    private val taskRepository: TaskRepository,
+    application: Application
+) : AndroidViewModel(application) {
+
     private val _uiState = MutableStateFlow(TasksUiState())
     private var _allTasks: List<Task> = emptyList()
     private var _currentFilter: FilterState = FilterState()
+    private var engineMutex = Mutex()
     private val settingsDataStore = SettingsDataStore(getApplication())
     private val context = getApplication<Application>()
     private val inferenceEngine = LocalInferenceEngine(getApplication())
@@ -48,12 +54,14 @@ class TasksViewModel(private val taskRepository: TaskRepository,
     private val _isGeneratingInsight = MutableStateFlow<Boolean>(false)
     val insight = _insight.asStateFlow()
     val isGeneratingInsight = _isGeneratingInsight.asStateFlow()
-
+    val aiModelReadyFlow = settingsDataStore.aiModelReadyFlow
+    private var lastInsightSnapshot: Int = -1
 
 
     val uiState: StateFlow<TasksUiState> = _uiState.asStateFlow()
 
     init {
+
         loadTasks()
     }
 
@@ -83,7 +91,7 @@ class TasksViewModel(private val taskRepository: TaskRepository,
             .filter { _currentFilter.durations.isEmpty() || it.duration in _currentFilter.durations }
             .let { tasks ->
                 when (_currentFilter.sortOrder) {
-                    SortOrder.DUE_DATE -> tasks.sortedWith(compareBy(nullsLast()) { it.dueDate } )
+                    SortOrder.DUE_DATE -> tasks.sortedWith(compareBy(nullsLast()) { it.dueDate })
                     SortOrder.PRIORITY -> tasks.sortedBy { it.priority }
                     SortOrder.CREATED -> tasks.sortedWith(compareBy(nullsLast()) { it.createdOn })
                     SortOrder.NAME -> tasks.sortedBy { it.taskName }
@@ -111,14 +119,15 @@ class TasksViewModel(private val taskRepository: TaskRepository,
         applyFilterAndUpdate()
     }
 
-    fun onTaskAdded(taskName: String,
-                    taskDescription: String,
-                    priority: Priority,
-                    dueDate: LocalDateTime?,
-                    needsReminder: Boolean,
-                    remindMe: LocalDateTime?,
-                    category: Category,
-                    duration: Duration
+    fun onTaskAdded(
+        taskName: String,
+        taskDescription: String = "",
+        priority: Priority = Priority.NORMAL,
+        dueDate: LocalDateTime? = null,
+        needsReminder: Boolean = false,
+        remindMe: LocalDateTime? = null,
+        category: Category = Category.NONE,
+        duration: Duration = Duration.MEDIUM
     ) {
         val newTask = Task(
             taskName = taskName,
@@ -172,17 +181,17 @@ class TasksViewModel(private val taskRepository: TaskRepository,
             taskRepository.updateTask(task.copy(isCompleted = isCompleted))
 
 
-        val parentId = task.parentTaskId ?: return@launch
-        val siblings = _allTasks.filter {
-            it.parentTaskId == parentId
-        }
+            val parentId = task.parentTaskId ?: return@launch
+            val siblings = _allTasks.filter {
+                it.parentTaskId == parentId
+            }
 
-        val allDone = siblings.all {
-            if (it.id == task.id) isCompleted else it.isCompleted
-        }
+            val allDone = siblings.all {
+                if (it.id == task.id) isCompleted else it.isCompleted
+            }
 
-        val parent = _allTasks.find { it.id == parentId } ?: return@launch
-        taskRepository.updateTask(parent.copy(isCompleted = allDone))
+            val parent = _allTasks.find { it.id == parentId } ?: return@launch
+            taskRepository.updateTask(parent.copy(isCompleted = allDone))
         }
     }
 
@@ -196,7 +205,7 @@ class TasksViewModel(private val taskRepository: TaskRepository,
 
             if (calendarId != null && eventId != null && task.dueDate != null) {
                 eventId.let { id ->
-                    GoogleCalendarSync.updateCalendarEvent(context, task, calendarId,id)
+                    GoogleCalendarSync.updateCalendarEvent(context, task, calendarId, id)
                 }
             }
         }
@@ -244,14 +253,20 @@ class TasksViewModel(private val taskRepository: TaskRepository,
         viewModelScope.launch {
             _isBreakingDown.value = true
             val variant = settingsDataStore.aiModelVariantFlow.first()
-            val modelPath = DownloadModelWorker.modelFile(getApplication(),variant).absolutePath
+            val modelPath = DownloadModelWorker.modelFile(getApplication(), variant).absolutePath
+
 
             if (!inferenceEngine.isReady()) {
                 inferenceEngine.initialize(modelPath)
             }
 
-            _suggestedSubtasks.value = inferenceEngine.suggestSubtasks(task.taskName, task.taskDescription)
+            _suggestedSubtasks.value = inferenceEngine.suggestSubtasks(
+                taskName = task.taskName,
+                taskDescription = task.taskDescription,
+                feedbackStyle = settingsDataStore.feedbackStyleFlow.first()
+            )
             _isBreakingDown.value = false
+
         }
 
     }
@@ -260,23 +275,43 @@ class TasksViewModel(private val taskRepository: TaskRepository,
         val completedTasksCount = completedTasks.count()
         val totalTasksCount = tasks.count() + completedTasks.count()
         val incompleteTasksCount = tasks.count()
+        val currentSnapshot = (tasks + completedTasks).hashCode()
 
-        val topCategory = (tasks + completedTasks).groupBy { it.category }
-            .maxByOrNull { ( _, tasks ) -> tasks.size }
-            ?.key?.name ?: "None"
+        val groupedCategories = (tasks + completedTasks).groupBy { it.category }
+        val maxCount = groupedCategories.maxOfOrNull { it.value.size } ?: 0
+        val topCategory = if (groupedCategories.count { it.value.size == maxCount} > 1) {
+            "multiple categories equally"
+        } else {
+            groupedCategories.maxByOrNull { it.value.size }?.key?.name ?: "None"
+        }
+
+        if (lastInsightSnapshot == currentSnapshot) {
+            return
+        }
 
         viewModelScope.launch {
             _isGeneratingInsight.value = true
             val variant = settingsDataStore.aiModelVariantFlow.first()
-            val modelPath = DownloadModelWorker.modelFile(getApplication(),variant).absolutePath
+            val modelPath =
+                DownloadModelWorker.modelFile(getApplication(), variant).absolutePath
+
 
             if (!inferenceEngine.isReady()) {
                 inferenceEngine.initialize(modelPath)
             }
 
-            _insight.value = inferenceEngine.generateInsight(totalTasksCount, completedTasksCount, incompleteTasksCount, topCategory)
+            _insight.value = inferenceEngine.generateInsight(
+                totalTasksCount,
+                completedTasksCount,
+                incompleteTasksCount,
+                topCategory,
+                feedbackStyle = settingsDataStore.feedbackStyleFlow.first()
+            )
+            lastInsightSnapshot = currentSnapshot
             _isGeneratingInsight.value = false
+
         }
+
 
     }
 
@@ -287,14 +322,16 @@ class TasksViewModel(private val taskRepository: TaskRepository,
     suspend fun suggestCategory(taskName: String): Category {
         val variant = settingsDataStore.aiModelVariantFlow.first()
         val modelPath = DownloadModelWorker.modelFile(getApplication(), variant).absolutePath
+
+
         if (!inferenceEngine.isReady()) {
             inferenceEngine.initialize(modelPath)
         }
-        val categorySuggested =  Category.entries.find {
+        val categorySuggested = Category.entries.find {
             inferenceEngine.suggestCategory(taskName) == it.name
         } ?: Category.NONE
 
         return categorySuggested
-    }
 
+    }
 }

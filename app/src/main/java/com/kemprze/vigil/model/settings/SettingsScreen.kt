@@ -1,6 +1,5 @@
 package com.kemprze.vigil.model.settings
 
-import android.R.attr.content
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
@@ -19,7 +18,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -49,9 +47,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.DialogProperties
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.common.api.ApiException
 import com.kemprze.vigil.data.DarkModePreferences
@@ -95,9 +93,11 @@ fun SettingsScreen(
             isConnected = false
         }
     }
+
     val aiOptIn by settingsViewModel.aiOptInFlow.collectAsState(
         initial = false
     )
+
     val aiModelReady by settingsViewModel.aiModelReadyFlow.collectAsState(
         initial = false
     )
@@ -105,6 +105,7 @@ fun SettingsScreen(
     var selectedModelVariant by remember { mutableStateOf("E2B") }
     val aiModelVariant by settingsViewModel.aiModelVariantFlow.collectAsState(initial = "E2B")
     val downloadProgress by settingsViewModel.downloadProgressFlow.collectAsState(initial = -1)
+    val isDownloadWaiting by settingsViewModel.isDownloadWaitingFlow.collectAsState(initial = false)
 
 
     if (showPrivacyDialog) {
@@ -352,17 +353,18 @@ fun SettingsScreen(
                             },
                             style = MaterialTheme.typography.bodySmall,
                             color = when {
-                                aiModelReady!! -> MaterialTheme.colorScheme.primary
-                                    aiOptIn!! -> MaterialTheme.colorScheme.secondary
+                                aiModelReady -> MaterialTheme.colorScheme.primary
+                                    aiOptIn -> MaterialTheme.colorScheme.secondary
                                 else -> MaterialTheme.colorScheme.outline
                             }
                         )
                     }
                     Button(
                         onClick = {
-                            if (aiOptIn!!) {
+                            if (aiOptIn) {
                                 settingsViewModel.saveAiOptIn(false)
                                 settingsViewModel.saveAiModelReady(false)
+                                settingsViewModel.clearAiModel()
                                 } else {
                                     showAiPrivacyDialog = true
                             }
@@ -378,6 +380,20 @@ fun SettingsScreen(
                         progress = { downloadProgress / 100f},
                         modifier = Modifier.fillMaxWidth()
                     )
+                }
+
+                if (aiOptIn && !aiModelReady && isDownloadWaiting) {
+                    Text(
+                        text = "The model file is large, it will start downloading once you have connected to the WiFi network.",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    Button(onClick = { settingsViewModel.downloadModelOnMobileData() } ) {
+                        Text(
+                            text = "Download anyway",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onPrimary
+                            )
+                    }
                 }
             }
         }
@@ -429,10 +445,11 @@ private fun FontCard(
 }
 
 @Composable
-private fun ThemeChip(
+internal fun ThemeChip(
     theme: AppTheme,
     isDark: Boolean,
     selected: Boolean,
+    size: Dp = 48.dp,
     onClick: () -> Unit
     ) {
     FilterChip(
@@ -444,7 +461,7 @@ private fun ThemeChip(
             selectedContainerColor = themePrimaryColor(theme, isDark)
         ),
         modifier = Modifier
-            .width(48.dp)
-            .height(48.dp)
+            .width(size)
+            .height(size)
     )
 }

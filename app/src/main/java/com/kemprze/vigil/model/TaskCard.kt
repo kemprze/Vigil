@@ -137,6 +137,7 @@ fun TaskCard(task: Task,
              onTaskDeleted: (Task) -> Unit,
              onEditClick: (Task) -> Unit,
              onBreakdownClick: (Task) -> Unit,
+             isAiModelReady: Boolean,
              modifier: Modifier = Modifier) {
     var details by remember { mutableStateOf(false) }
     val dismissState = rememberSwipeToDismissBoxState(
@@ -263,21 +264,25 @@ fun TaskCard(task: Task,
                                 )
                             }
                         }
-                        Surface(
-                            onClick = { onBreakdownClick(task) },
-                            shape = RoundedCornerShape(8.dp),
-                            color = MaterialTheme.colorScheme.surfaceVariant,
-                            modifier = Modifier.size(40.dp)
-                                .padding(start = 4.dp)
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Icon(
-                                    imageVector = Icons.Default.AutoAwesome,
-                                    contentDescription = "Break down task",
-                                    modifier = Modifier.size(18.dp)
-                                )
+
+                        if (isAiModelReady) {
+                            Surface(
+                                onClick = { onBreakdownClick(task) },
+                                shape = RoundedCornerShape(8.dp),
+                                color = MaterialTheme.colorScheme.surfaceVariant,
+                                modifier = Modifier.size(40.dp)
+                                    .padding(start = 4.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = Icons.Default.AutoAwesome,
+                                        contentDescription = "Break down task",
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
                             }
                         }
+
                         Surface(
                             onClick = { },
                             shape = RoundedCornerShape(8.dp),

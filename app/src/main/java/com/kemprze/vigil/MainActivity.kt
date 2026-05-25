@@ -30,6 +30,7 @@ import com.kemprze.vigil.model.CalendarScreen
 import com.kemprze.vigil.model.EditTaskScreen
 import com.kemprze.vigil.model.StatsScreen
 import com.kemprze.vigil.model.TaskScreen
+import com.kemprze.vigil.model.settings.OnboardingWizard
 import com.kemprze.vigil.model.settings.SettingsScreen
 import com.kemprze.vigil.model.tasks.TasksViewModel
 import com.kemprze.vigil.model.tasks.TasksViewModelFactory
@@ -55,11 +56,15 @@ class MainActivity : ComponentActivity() {
             notificationManager.createNotificationChannel(channel)
         }
         setContent {
+            val tasksViewModel: TasksViewModel = viewModel(
+                factory = TasksViewModelFactory(LocalContext.current)
+            )
             val settingsViewModel: SettingsViewModel = viewModel()
             val appTheme by settingsViewModel.themeFlow.collectAsState(initial = AppTheme.SCARLET)
             val appFont by settingsViewModel.fontFlow.collectAsState(initial = AppFont.LATO)
             val darkMode by settingsViewModel.darkModeFlow.collectAsState(initial = DarkModePreferences.SYSTEM)
             val dynamicColor by settingsViewModel.dynamicColorFlow.collectAsState(initial = false)
+            val hasOnboarded by settingsViewModel.hasOnboardedFlow.collectAsState(initial = false)
 
             TODOPrototypingTheme(
                 appTheme = appTheme,
@@ -71,11 +76,20 @@ class MainActivity : ComponentActivity() {
                 },
                 dynamicColor = dynamicColor
             ) {
-                Scaffold(
-                    modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    AppNavigation(
-                        modifier = Modifier.padding(innerPadding),
-                        settingsViewModel = settingsViewModel)
+                if (hasOnboarded) {
+                    Scaffold(
+                        modifier = Modifier.fillMaxSize()) { innerPadding ->
+                        AppNavigation(
+                            modifier = Modifier.padding(innerPadding),
+                            settingsViewModel = settingsViewModel,
+                            tasksViewModel = tasksViewModel
+                        )
+                    }
+                } else {
+                    OnboardingWizard(
+                        settingsViewModel = settingsViewModel,
+                        tasksViewModel = tasksViewModel
+                    )
                 }
             }
         }
@@ -84,11 +98,11 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun AppNavigation(modifier: Modifier = Modifier,
-                  settingsViewModel: SettingsViewModel) {
+                  settingsViewModel: SettingsViewModel,
+                  tasksViewModel: TasksViewModel) {
     val navController: NavHostController = rememberNavController()
-    val tasksViewModel: TasksViewModel = viewModel(
-        factory = TasksViewModelFactory(LocalContext.current)
-    )
+    val isAiModelReady by tasksViewModel.aiModelReadyFlow.collectAsState(initial = false)
+
 
     NavHost(
         navController = navController,
@@ -104,9 +118,16 @@ fun AppNavigation(modifier: Modifier = Modifier,
                 onNavigateToSettings = {
                     navController.navigate(Screen.SettingsScreen.route)
                 },
-                onCalendarClick = { navController.navigate(Screen.CalendarScreen.route) },
-                onStatsClick = { navController.navigate(Screen.StatsScreen.route) },
-                onEditClick = { task -> navController.navigate(Screen.EditTaskScreen.createRoute(task.id))}
+                onCalendarClick = {
+                    navController.navigate(Screen.CalendarScreen.route)
+                                  },
+                onStatsClick = {
+                    navController.navigate(Screen.StatsScreen.route)
+                               },
+                onEditClick = {
+                    task ->
+                    navController.navigate(Screen.EditTaskScreen.createRoute(task.id))
+                }
             )
         }
         composable(route = Screen.AddTaskScreen.route) {
@@ -137,7 +158,9 @@ fun AppNavigation(modifier: Modifier = Modifier,
         composable(route = Screen.CalendarScreen.route) {
             CalendarScreen(
                 tasks = tasksViewModel.uiState.collectAsState().value.tasks + tasksViewModel.uiState.collectAsState().value.completedTasks,
-                onNavigateBack = { navController.navigateUp() }
+                onNavigateBack = { navController.navigateUp() },
+                isAiModelReady = isAiModelReady
+
             )
         }
         composable(route = Screen.StatsScreen.route) {
@@ -166,7 +189,10 @@ fun AppNavigation(modifier: Modifier = Modifier,
 @Preview
 fun NavigationPreview() {
     TODOPrototypingTheme(appTheme = AppTheme.SCARLET, appFont = AppFont.ATKINSON) {
-        AppNavigation(settingsViewModel = viewModel())
+        AppNavigation(
+            settingsViewModel = viewModel(),
+            tasksViewModel = viewModel()
+        )
     }
 }
 
@@ -174,6 +200,9 @@ fun NavigationPreview() {
 @Preview
 fun NavigationPreviewDark() {
     TODOPrototypingTheme(appTheme = AppTheme.SCARLET, appFont = AppFont.ATKINSON, darkTheme = true) {
-        AppNavigation(settingsViewModel = viewModel())
+        AppNavigation(
+            settingsViewModel = viewModel(),
+            tasksViewModel = viewModel()
+        )
     }
 }

@@ -19,7 +19,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -46,13 +48,14 @@ fun StatsScreen(
     val insight by tasksViewModel.insight.collectAsState()
     val isGeneratingInsight by tasksViewModel.isGeneratingInsight.collectAsState()
 
-    val categoryCounts = remember (activeTasks) {
+    val categoryCounts = remember(activeTasks) {
         Category.entries.map { category ->
             category to activeTasks.count { it.category == category }
         }.filter { (_, count) -> count > 0 }
     }
 
     val total = remember(activeTasks) { activeTasks.size }
+    val aiModelReady by tasksViewModel.aiModelReadyFlow.collectAsState(initial = false)
 
     Scaffold(
         topBar = {
@@ -62,7 +65,8 @@ fun StatsScreen(
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back")
+                            contentDescription = "Back"
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -71,60 +75,63 @@ fun StatsScreen(
                 )
             )
         }
-    ) {
-        innerPadding ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                SingleChoiceSegmentedButtonRow() {
-                    SegmentedButton(
-                        selected = !showCompleted,
-                        onClick = { showCompleted = false},
-                        shape = SegmentedButtonDefaults.itemShape(0, 2),
-                        icon = { },
-                        label = { Text("Incomplete") }
-                    )
-                    SegmentedButton(
-                        selected = showCompleted,
-                        onClick = { showCompleted = true},
-                        shape = SegmentedButtonDefaults.itemShape(1,2),
-                        icon = { },
-                        label = { Text("Complete") }
-                    )
-                }
-                Spacer(modifier = Modifier.height(24.dp))
-                DonutChart(
-                    categoryCounts = categoryCounts,
-                    total = total,
-                    modifier = Modifier.align(Alignment.CenterHorizontally)
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            SingleChoiceSegmentedButtonRow() {
+                SegmentedButton(
+                    selected = !showCompleted,
+                    onClick = { showCompleted = false },
+                    shape = SegmentedButtonDefaults.itemShape(0, 2),
+                    icon = { },
+                    label = { Text("Incomplete") }
                 )
-                Spacer(modifier = Modifier.height(24.dp))
-                categoryCounts.forEach { (category, count) ->
-                    Row(modifier = Modifier
+                SegmentedButton(
+                    selected = showCompleted,
+                    onClick = { showCompleted = true },
+                    shape = SegmentedButtonDefaults.itemShape(1, 2),
+                    icon = { },
+                    label = { Text("Complete") }
+                )
+            }
+            Spacer(modifier = Modifier.height(24.dp))
+            DonutChart(
+                categoryCounts = categoryCounts,
+                total = total,
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            )
+            Spacer(modifier = Modifier.height(24.dp))
+            categoryCounts.forEach { (category, count) ->
+                Row(
+                    modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 4.dp)
-                    ) {
-                        Box(modifier = Modifier
+                ) {
+                    Box(
+                        modifier = Modifier
                             .size(12.dp)
                             .clip(CircleShape)
-                            .background(category.color))
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = category.name.lowercase().replaceFirstChar { it.titlecase() },
-                            style = MaterialTheme.typography.bodyMedium,
-                            modifier = Modifier.weight(1f)
-                        )
-                        Text(
-                            text = "$count (${(count.toFloat() / total * 100).toInt()}%)",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.outline
-                        )
-                    }
+                            .background(category.color)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = category.name.lowercase().replaceFirstChar { it.titlecase() },
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Text(
+                        text = "$count (${(count.toFloat() / total * 100).toInt()}%)",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.outline
+                    )
                 }
+            }
+            if (aiModelReady) {
                 Column(
                     modifier = Modifier
                         .fillMaxSize(),
@@ -136,21 +143,20 @@ fun StatsScreen(
                     }
 
                     HorizontalDivider(
-                        modifier = Modifier.padding(top = 4.dp, bottom = 8.dp)
+                        modifier = Modifier.padding(top = 4.dp, bottom = 4.dp)
                     )
                     Text(
                         text = "Your insights",
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier.padding(bottom = 4.dp)
+                        modifier = Modifier.padding(bottom = 2.dp)
                     )
                     Row(
                         modifier = Modifier
-                            .fillMaxSize()
-                            .padding(24.dp),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
-                    )   {
+                            .fillMaxWidth()
+                            .padding(12.dp),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
                         if (isGeneratingInsight) {
                             CircularProgressIndicator()
                         } else {
@@ -159,7 +165,30 @@ fun StatsScreen(
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.outline
                             )
+                        }
                     }
+                }
+            } else {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState()),
+                    horizontalAlignment = Alignment.Start,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    LaunchedEffect(Unit) {
+                        tasksViewModel.generateInsight(incompleteTasks, completedTasks)
+                    }
+
+                    HorizontalDivider(
+                        modifier = Modifier.padding(top = 4.dp, bottom = 4.dp)
+                    )
+                    Text(
+                        text = "Enable AI in Settings to see insights.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.outline
+                    )
+
                 }
             }
         }

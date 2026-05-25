@@ -24,6 +24,9 @@ class SettingsDataStore(private val context: Context) {
         val AI_OPT_IN = booleanPreferencesKey("ai_opt_in")
         val AI_MODEL_VARIANT = stringPreferencesKey("ai_model_variant")
         val AI_MODEL_READY = booleanPreferencesKey("ai_model_ready")
+        val PREFERRED_NAME = stringPreferencesKey("preferred_name")
+        val FEEDBACK_STYLE = stringPreferencesKey("feedback_style")
+        val ONBOARDING_COMPLETED = booleanPreferencesKey("has_completed_onboarding")
     }
 
     val themeFlow: Flow<AppTheme> = context.dataStore.data.map {
@@ -50,7 +53,7 @@ class SettingsDataStore(private val context: Context) {
         prefs -> prefs[GOOGLE_CALENDAR_SYNC_ID]
     }
 
-    val aiOptInFlow: Flow<Boolean?> = context.dataStore.data.map {
+    val aiOptInFlow: Flow<Boolean> = context.dataStore.data.map {
         prefs -> prefs[AI_OPT_IN]  ?: false
     }
 
@@ -58,8 +61,20 @@ class SettingsDataStore(private val context: Context) {
         prefs -> prefs[AI_MODEL_VARIANT] ?: "E2B"
     }
 
-    val aiModelReadyFlow: Flow<Boolean?> = context.dataStore.data.map {
+    val aiModelReadyFlow: Flow<Boolean> = context.dataStore.data.map {
         prefs -> prefs[AI_MODEL_READY] ?: false
+    }
+
+    val hasOnboardedFlow: Flow<Boolean> = context.dataStore.data.map {
+        prefs -> prefs[ONBOARDING_COMPLETED] ?: false
+    }
+
+    val preferredNameFlow: Flow<String> = context.dataStore.data.map {
+        prefs -> prefs[PREFERRED_NAME] ?: "friend"
+    }
+
+    val feedbackStyleFlow: Flow<String> = context.dataStore.data.map {
+        prefs -> prefs[FEEDBACK_STYLE] ?: "encouraging"
     }
 
     suspend fun saveTheme(theme: AppTheme) {
@@ -81,6 +96,24 @@ class SettingsDataStore(private val context: Context) {
     suspend fun saveGoogleSyncFlow(googleCalendarId: String) {
         context.dataStore.edit {
             prefs -> prefs[GOOGLE_CALENDAR_SYNC_ID] = googleCalendarId
+        }
+    }
+
+    suspend fun savePreferredName(name: String) {
+        context.dataStore.edit {
+            prefs -> prefs[PREFERRED_NAME] = name
+        }
+    }
+
+    suspend fun saveFeedbackStyle(style: String) {
+        context.dataStore.edit {
+            prefs -> prefs[FEEDBACK_STYLE] = style
+        }
+    }
+
+    suspend fun saveOnboardingCompleted(hasCompleted: Boolean) {
+        context.dataStore.edit {
+            prefs -> prefs[ONBOARDING_COMPLETED] = hasCompleted
         }
     }
 

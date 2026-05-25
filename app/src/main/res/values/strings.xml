@@ -18,5 +18,12 @@
     <string name="icon_other">📋</string>
     <string name="category_none" />
     <string name="icon_none" />
-    <string name="app_name">TODO Prototyping</string>
+    <string name="app_name">Vigil</string>
+
+    <string name="feedback_encouraging_emoji">🌱</string>
+    <string name="feedback_encouraging_label">Encouraging</string>
+    <string name="feedback_direct_emoji">📊</string>
+    <string name="feedback_direct_label">Direct</string>
+    <string name="feedback_tough_emoji">🔥</string>
+    <string name="feedback_tough_label">Tough love</string>
 </resources>

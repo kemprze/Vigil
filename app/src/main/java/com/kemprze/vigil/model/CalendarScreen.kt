@@ -48,7 +48,8 @@ import java.util.Locale
 @Composable
 fun CalendarScreen(
     tasks: List<Task>,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    isAiModelReady: Boolean
 ) {
     var currentMonth by remember { mutableStateOf(YearMonth.now()) }
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
@@ -172,6 +173,7 @@ fun CalendarScreen(
                             subtasks = emptyList(),
                             onSubtaskCompleted = { _, _ -> },
                             modifier = Modifier,
+                            isAiModelReady = isAiModelReady
                         )
                     }
                 }

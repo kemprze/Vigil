@@ -1,4 +1,5 @@
 package com.kemprze.vigil.model
+
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -62,17 +63,18 @@ import com.kemprze.vigil.data.model.SortOrder
 import com.kemprze.vigil.data.model.Task
 import com.kemprze.vigil.model.tasks.TasksViewModel
 import com.kemprze.vigil.ui.theme.TODOPrototypingTheme
+import kotlinx.coroutines.flow.first
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TaskScreen(
-        modifier: Modifier = Modifier,
-        tasksViewModel: TasksViewModel = viewModel(),
-        onNavigateToAddTask: () -> Unit,
-        onNavigateToSettings: () -> Unit,
-        onCalendarClick: () -> Unit,
-        onStatsClick: () -> Unit,
-        onEditClick: (Task) -> Unit
+    modifier: Modifier = Modifier,
+    tasksViewModel: TasksViewModel = viewModel(),
+    onNavigateToAddTask: () -> Unit,
+    onNavigateToSettings: () -> Unit,
+    onCalendarClick: () -> Unit,
+    onStatsClick: () -> Unit,
+    onEditClick: (Task) -> Unit
 ) {
 
     val taskUiState by tasksViewModel.uiState.collectAsState()
@@ -80,6 +82,8 @@ fun TaskScreen(
     var showFilterSheet by remember { mutableStateOf(false) }
     val suggestedSubtasks by tasksViewModel.suggestedSubtasks.collectAsState()
     val isBreakingDown by tasksViewModel.isBreakingDown.collectAsState()
+    val aiModelReady by tasksViewModel.aiModelReadyFlow.collectAsState(initial = false)
+
 
     if (showFilterSheet) {
         ModalBottomSheet(
@@ -99,8 +103,8 @@ fun TaskScreen(
     Scaffold(
         topBar = {
             MainTaskScreenAppBar(
-                onListTypeChange = {
-                        newListType -> currentList = newListType
+                onListTypeChange = { newListType ->
+                    currentList = newListType
                 },
                 currentList = currentList,
                 onSettingsClick = onNavigateToSettings,
@@ -108,10 +112,11 @@ fun TaskScreen(
                 filterActive = taskUiState.filterState.isActive
             )
         },
-        bottomBar = { MainTaskScreenBottomAppBar(
-            onAddClick = onNavigateToAddTask,
-            onCalendarClick = onCalendarClick,
-            onStatsClick = onStatsClick
+        bottomBar = {
+            MainTaskScreenBottomAppBar(
+                onAddClick = onNavigateToAddTask,
+                onCalendarClick = onCalendarClick,
+                onStatsClick = onStatsClick
             )
         }
     ) { innerPadding ->
@@ -120,14 +125,25 @@ fun TaskScreen(
             incompleteTasks = taskUiState.tasks,
             completeTasks = taskUiState.completedTasks,
             allTasks = taskUiState.allTasks,
-            onTaskCompleted = { task, isCompleted -> tasksViewModel.onTaskCompleted(task, isCompleted)},
+            onTaskCompleted = { task, isCompleted ->
+                tasksViewModel.onTaskCompleted(
+                    task,
+                    isCompleted
+                )
+            },
             onTaskDeleted = { task -> tasksViewModel.onTaskDeleted(task) },
             onEditClick = onEditClick,
-            onSubtaskCompleted = { task, isCompleted -> tasksViewModel.onTaskCompleted(task, isCompleted) },
-            onBreakdownClick = { task -> tasksViewModel.breakdownTask(task)},
+            onSubtaskCompleted = { task, isCompleted ->
+                tasksViewModel.onTaskCompleted(
+                    task,
+                    isCompleted
+                )
+            },
+            onBreakdownClick = { task -> tasksViewModel.breakdownTask(task) },
             modifier = modifier
                 .fillMaxSize()
-                .padding(innerPadding)
+                .padding(innerPadding),
+            aiModelReady = aiModelReady
         )
 
         if (suggestedSubtasks.isNotEmpty()) {
@@ -145,9 +161,8 @@ fun TaskScreen(
                         text = "Suggested subtasks",
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.primary
-                        )
-                    suggestedSubtasks.forEach {
-                        subtask ->
+                    )
+                    suggestedSubtasks.forEach { subtask ->
                         Text(
                             text = "• $subtask",
                             style = MaterialTheme.typography.bodyMedium
@@ -169,8 +184,7 @@ fun TaskScreen(
                                 val task = tasksViewModel.currentBreakdownTask.value
 
                                 if (task != null) {
-                                    suggestedSubtasks.forEach {
-                                        subtaskName ->
+                                    suggestedSubtasks.forEach { subtaskName ->
                                         tasksViewModel.onSubtaskAdded(task, subtaskName)
                                     }
                                 }
@@ -188,12 +202,14 @@ fun TaskScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainTaskScreenAppBar(modifier: Modifier = Modifier,
-                         currentList: ListTypes,
-                         filterActive: Boolean,
-                         onListTypeChange: (ListTypes) -> Unit,
-                         onFilterClick: () -> Unit,
-                         onSettingsClick: () -> Unit) {
+fun MainTaskScreenAppBar(
+    modifier: Modifier = Modifier,
+    currentList: ListTypes,
+    filterActive: Boolean,
+    onListTypeChange: (ListTypes) -> Unit,
+    onFilterClick: () -> Unit,
+    onSettingsClick: () -> Unit
+) {
     TopAppBar(
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -247,10 +263,10 @@ fun MainTaskScreenAppBar(modifier: Modifier = Modifier,
 
 @Composable
 fun MainTaskScreenBottomAppBar(
-                               modifier: Modifier = Modifier,
-                               onAddClick: () -> Unit,
-                               onCalendarClick: () -> Unit,
-                               onStatsClick: () -> Unit
+    modifier: Modifier = Modifier,
+    onAddClick: () -> Unit,
+    onCalendarClick: () -> Unit,
+    onStatsClick: () -> Unit
 ) {
     BottomAppBar(
         actions = {
@@ -288,14 +304,14 @@ fun MainTaskScreenBottomAppBar(
         },
         modifier = modifier,
         floatingActionButton = {
-                FloatingActionButton(
-                    onClick = onAddClick
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Add new task"
-                    )
-                }
+            FloatingActionButton(
+                onClick = onAddClick
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Add new task"
+                )
+            }
         }
     )
 }
@@ -311,6 +327,7 @@ fun TaskList(
     onEditClick: (Task) -> Unit,
     onSubtaskCompleted: (Task, Boolean) -> Unit,
     onBreakdownClick: (Task) -> Unit,
+    aiModelReady: (Boolean),
     modifier: Modifier = Modifier
 ) {
     val currentListItems = when (currentListType) {
@@ -322,13 +339,24 @@ fun TaskList(
         val (icon, title, subtitle) = when (currentListType) {
             ListTypes.INCOMPLETE -> if (completeTasks.isEmpty())
                 Triple(Icons.Outlined.Inbox, "Nothing here yet", "Add your first task with +")
-            else Triple(Icons.Outlined.CheckCircle, "All caught up", "Everything's done. Nice work.")
-            ListTypes.COMPLETE -> Triple(Icons.Outlined.HourglassEmpty, "Nothing completed yet", "Finished tasks will appear here")
+            else Triple(
+                Icons.Outlined.CheckCircle,
+                "All caught up",
+                "Everything's done. Nice work."
+            )
+
+            ListTypes.COMPLETE -> Triple(
+                Icons.Outlined.HourglassEmpty,
+                "Nothing completed yet",
+                "Finished tasks will appear here"
+            )
         }
-        EmptyState(icon = icon, title = title, subtitle = subtitle,
+        EmptyState(
+            icon = icon, title = title, subtitle = subtitle,
             modifier = Modifier
                 .fillMaxSize()
-                .padding(32.dp))
+                .padding(32.dp)
+        )
         return
     }
 
@@ -337,17 +365,19 @@ fun TaskList(
         contentPadding = PaddingValues(dimensionResource(R.dimen.padding_medium)),
         modifier = modifier
     ) {
-        items(currentListItems, key = {it.id}) {
-            task -> TaskCard(
-            task = task,
-            subtasks = allTasks.filter { it.parentTaskId == task.id },
-            onTaskCompleted = onTaskCompleted,
-            onTaskDeleted = onTaskDeleted,
-            onEditClick = onEditClick,
-            onSubtaskCompleted = onSubtaskCompleted,
-            modifier = Modifier.animateItem(),
-            onBreakdownClick = { onBreakdownClick(task) }
-        )
+        items(currentListItems, key = { it.id }) { task ->
+            TaskCard(
+                task = task,
+                subtasks = allTasks.filter { it.parentTaskId == task.id },
+                onTaskCompleted = onTaskCompleted,
+                onTaskDeleted = onTaskDeleted,
+                onEditClick = onEditClick,
+                onSubtaskCompleted = onSubtaskCompleted,
+                modifier = Modifier.animateItem(),
+                onBreakdownClick = { onBreakdownClick(task) },
+                isAiModelReady = aiModelReady
+
+            )
         }
     }
 }
@@ -363,15 +393,15 @@ private fun FilterSheetContent(
             .fillMaxWidth()
             .padding(16.dp)
     ) {
-        Text("Sort by",
+        Text(
+            "Sort by",
             style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.primary
         )
 
         Spacer(modifier = Modifier.height(8.dp))
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            SortOrder.entries.forEach {
-                sort ->
+            SortOrder.entries.forEach { sort ->
                 FilterChip(
                     selected = filterState.sortOrder == sort,
                     onClick = { onFilterChanged(filterState.copy(sortOrder = sort)) },
@@ -381,9 +411,11 @@ private fun FilterSheetContent(
         }
 
         Spacer(modifier = Modifier.height(16.dp))
-        Text("Category",
+        Text(
+            "Category",
             style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.primary)
+            color = MaterialTheme.colorScheme.primary
+        )
         Spacer(modifier = Modifier.height(8.dp))
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Category.entries.filter { it != Category.NONE }.forEach { category ->
@@ -396,14 +428,16 @@ private fun FilterSheetContent(
                             filterState.categories + category
                         onFilterChanged(filterState.copy(categories = updated))
                     },
-                    label = { Text(category.name.lowercase().replaceFirstChar { it.titlecase() })}
+                    label = { Text(category.name.lowercase().replaceFirstChar { it.titlecase() }) }
                 )
             }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
-        Text("Priority", style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.primary)
+        Text(
+            "Priority", style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.primary
+        )
         Spacer(modifier = Modifier.height(8.dp))
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Priority.entries.forEach { priority ->
@@ -416,14 +450,16 @@ private fun FilterSheetContent(
                             filterState.priorities + priority
                         onFilterChanged(filterState.copy(priorities = updated))
                     },
-                    label = { Text("${priority.emoji} ${priority.label}")}
+                    label = { Text("${priority.emoji} ${priority.label}") }
                 )
             }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
-        Text("Duration", style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.primary)
+        Text(
+            "Duration", style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.primary
+        )
         Spacer(modifier = Modifier.height(8.dp))
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Duration.entries.forEach { duration ->
@@ -451,6 +487,7 @@ private fun FilterSheetContent(
         Spacer(modifier = Modifier.height(16.dp))
     }
 }
+
 @Composable
 private fun EmptyState(
     icon: ImageVector,
