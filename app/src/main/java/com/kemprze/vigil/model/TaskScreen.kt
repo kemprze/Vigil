@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -16,6 +17,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.BarChart
@@ -83,7 +85,7 @@ fun TaskScreen(
     val suggestedSubtasks by tasksViewModel.suggestedSubtasks.collectAsState()
     val isBreakingDown by tasksViewModel.isBreakingDown.collectAsState()
     val aiModelReady by tasksViewModel.aiModelReadyFlow.collectAsState(initial = false)
-
+    val preferredName by tasksViewModel.preferredNameFlow.collectAsState(initial = "")
 
     if (showFilterSheet) {
         ModalBottomSheet(
@@ -107,6 +109,7 @@ fun TaskScreen(
                     currentList = newListType
                 },
                 currentList = currentList,
+                preferredName = preferredName,
                 onSettingsClick = onNavigateToSettings,
                 onFilterClick = { showFilterSheet = true },
                 filterActive = taskUiState.filterState.isActive
@@ -206,37 +209,43 @@ fun MainTaskScreenAppBar(
     modifier: Modifier = Modifier,
     currentList: ListTypes,
     filterActive: Boolean,
+    preferredName: String,
     onListTypeChange: (ListTypes) -> Unit,
     onFilterClick: () -> Unit,
     onSettingsClick: () -> Unit
 ) {
     TopAppBar(
+        modifier = Modifier.height(64.dp),
+        windowInsets = WindowInsets(top = 0.dp),
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer,
-            titleContentColor = MaterialTheme.colorScheme.primary
+            titleContentColor = MaterialTheme.colorScheme.primary,
         ),
+        navigationIcon = {
+            IconButton(
+                onClick = {
+                    onListTypeChange(
+                        if (currentList == ListTypes.INCOMPLETE) ListTypes.COMPLETE else ListTypes.INCOMPLETE
+                    )
+                }
+            ) {
+                Icon(
+                    imageVector = if (currentList == ListTypes.COMPLETE) Icons.Filled.CheckCircle else Icons.Outlined.CheckCircle,
+                    contentDescription = "Toggle task list"
+                )
+            }
+        },
         title = {
             Row(
                 horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                SingleChoiceSegmentedButtonRow() {
-                    ListTypes.entries.forEachIndexed { index, listType ->
-                        SegmentedButton(
-                            selected = listType == currentList,
-                            onClick = { onListTypeChange(listType) },
-                            shape = SegmentedButtonDefaults.itemShape(
-                                index,
-                                ListTypes.entries.size
-                            ),
-                            icon = {},
-                            label = {
-                                Text(
-                                    listType.name.lowercase().replaceFirstChar { it.titlecase() })
-                            }
-                        )
-                    }
-                }
+                Text(
+                    text = Greetings.forHour(preferredName),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
             }
         },
         actions = {
@@ -256,8 +265,7 @@ fun MainTaskScreenAppBar(
                     contentDescription = "Settings"
                 )
             }
-        },
-        modifier = modifier
+        }
     )
 }
 

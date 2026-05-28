@@ -55,6 +55,7 @@ class TasksViewModel(
     val insight = _insight.asStateFlow()
     val isGeneratingInsight = _isGeneratingInsight.asStateFlow()
     val aiModelReadyFlow = settingsDataStore.aiModelReadyFlow
+    val preferredNameFlow = settingsDataStore.preferredNameFlow
     private var lastInsightSnapshot: Int = -1
 
 
