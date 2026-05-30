@@ -46,6 +46,8 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     val preferredNameFlow = settingsDataStore.preferredNameFlow
     val hasOnboardedFlow = settingsDataStore.hasOnboardedFlow
 
+    val feedbackStyleFlow = settingsDataStore.feedbackStyleFlow
+
     val isDownloadWaitingFlow = WorkManager.getInstance(getApplication())
         .getWorkInfosByTagFlow("download_model")
         .map {

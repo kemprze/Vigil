@@ -35,8 +35,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.kemprze.vigil.R
 import com.kemprze.vigil.data.model.Category
 import com.kemprze.vigil.data.model.Task
 import java.time.LocalDate
@@ -82,7 +84,7 @@ fun CalendarScreen(
                  },
             navigationIcon = { IconButton(onClick = onNavigateBack) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Back") } },
+                contentDescription = stringResource(R.string.cd_back)) } },
             colors = TopAppBarDefaults.topAppBarColors(
                 containerColor = MaterialTheme.colorScheme.primaryContainer,
                 titleContentColor = MaterialTheme.colorScheme.primary
@@ -105,14 +107,14 @@ fun CalendarScreen(
                     onClick = { currentMonth = currentMonth.minusMonths(1) }) {
                     Icon(
                         Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Previous month"
+                        contentDescription = stringResource(R.string.cd_previous_month)
                     )
                 }
                 IconButton(
                     onClick = { currentMonth = currentMonth.plusMonths(1) }) {
                     Icon(
                         Icons.AutoMirrored.Filled.ArrowForward,
-                        contentDescription = "Next month"
+                        contentDescription = stringResource(R.string.cd_next_month)
                     )
                 }
             }
@@ -155,7 +157,7 @@ fun CalendarScreen(
             Spacer(modifier = Modifier.height(8.dp))
             if (selectedDayTasks.isEmpty()) {
                 Text(
-                    text = "No tasks this day",
+                    text = stringResource(R.string.msg_no_tasks_this_day),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.outline
                 )

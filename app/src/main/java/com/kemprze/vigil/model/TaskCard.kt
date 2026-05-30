@@ -47,6 +47,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.kemprze.vigil.R
 import com.kemprze.vigil.data.model.Category
 import com.kemprze.vigil.data.model.Duration
 import com.kemprze.vigil.data.model.Priority
@@ -165,7 +166,7 @@ fun TaskCard(task: Task,
             ) {
                 Icon(
                     imageVector = Icons.Default.Delete,
-                    contentDescription = "Delete",
+                    contentDescription = stringResource(R.string.cd_delete_task),
                     tint = MaterialTheme.colorScheme.onErrorContainer
                 )
             }
@@ -259,7 +260,7 @@ fun TaskCard(task: Task,
                             Box(contentAlignment = Alignment.Center) {
                                 Icon(
                                     imageVector = Icons.Default.Edit,
-                                    contentDescription = "Edit task",
+                                    contentDescription = stringResource(R.string.cd_edit_task),
                                     modifier = Modifier.size(18.dp)
                                 )
                             }
@@ -276,26 +277,10 @@ fun TaskCard(task: Task,
                                 Box(contentAlignment = Alignment.Center) {
                                     Icon(
                                         imageVector = Icons.Default.AutoAwesome,
-                                        contentDescription = "Break down task",
+                                        contentDescription = stringResource(R.string.cd_breakdown_task),
                                         modifier = Modifier.size(18.dp)
                                     )
                                 }
-                            }
-                        }
-
-                        Surface(
-                            onClick = { },
-                            shape = RoundedCornerShape(8.dp),
-                            color = MaterialTheme.colorScheme.surfaceVariant,
-                            modifier = Modifier.size(40.dp)
-                                .padding(start = 4.dp)
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Icon(
-                                    imageVector = Icons.Default.CheckCircle,
-                                    contentDescription = "Complete task",
-                                    modifier = Modifier.size(18.dp)
-                                )
                             }
                         }
                     }

@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -30,6 +31,8 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
+import com.kemprze.vigil.R
 import com.kemprze.vigil.data.model.Category
 import com.kemprze.vigil.data.model.Task
 import com.kemprze.vigil.model.tasks.TasksViewModel
@@ -60,12 +63,12 @@ fun StatsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Statistics") },
+                title = { Text(stringResource(R.string.title_statistics)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
+                            contentDescription = stringResource(R.string.cd_back)
                         )
                     }
                 },
@@ -89,14 +92,14 @@ fun StatsScreen(
                     onClick = { showCompleted = false },
                     shape = SegmentedButtonDefaults.itemShape(0, 2),
                     icon = { },
-                    label = { Text("Incomplete") }
+                    label = { Text(stringResource(R.string.label_incomplete)) }
                 )
                 SegmentedButton(
                     selected = showCompleted,
                     onClick = { showCompleted = true },
                     shape = SegmentedButtonDefaults.itemShape(1, 2),
                     icon = { },
-                    label = { Text("Complete") }
+                    label = { Text(stringResource(R.string.label_complete)) }
                 )
             }
             Spacer(modifier = Modifier.height(24.dp))
@@ -134,7 +137,8 @@ fun StatsScreen(
             if (aiModelReady) {
                 Column(
                     modifier = Modifier
-                        .fillMaxSize(),
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState()),
                     horizontalAlignment = Alignment.Start,
                     verticalArrangement = Arrangement.Center
                 ) {
@@ -146,7 +150,7 @@ fun StatsScreen(
                         modifier = Modifier.padding(top = 4.dp, bottom = 4.dp)
                     )
                     Text(
-                        text = "Your insights",
+                        text = stringResource(R.string.title_your_insights),
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onPrimaryContainer,
                         modifier = Modifier.padding(bottom = 2.dp)
@@ -184,7 +188,7 @@ fun StatsScreen(
                         modifier = Modifier.padding(top = 4.dp, bottom = 4.dp)
                     )
                     Text(
-                        text = "Enable AI in Settings to see insights.",
+                        text = stringResource(R.string.msg_enable_ai_for_insights),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.outline
                     )

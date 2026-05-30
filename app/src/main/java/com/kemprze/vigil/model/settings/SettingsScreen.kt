@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -42,16 +44,19 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.common.api.ApiException
+import com.kemprze.vigil.R
 import com.kemprze.vigil.data.DarkModePreferences
 import com.kemprze.vigil.sync.GoogleCalendarSync
 import com.kemprze.vigil.ui.theme.AppFont
@@ -106,14 +111,14 @@ fun SettingsScreen(
     val aiModelVariant by settingsViewModel.aiModelVariantFlow.collectAsState(initial = "E2B")
     val downloadProgress by settingsViewModel.downloadProgressFlow.collectAsState(initial = -1)
     val isDownloadWaiting by settingsViewModel.isDownloadWaitingFlow.collectAsState(initial = false)
-
+    val selectedFeedbackStyle by settingsViewModel.feedbackStyleFlow.collectAsState(initial = "encouraging")
 
     if (showPrivacyDialog) {
         AlertDialog(
             onDismissRequest = { showPrivacyDialog = false },
-            title = { Text("Before you connect") },
+            title = { Text(stringResource(R.string.dialog_title_before_connect)) },
             text = {
-                Text("Connecting Google Calendar will send your task names, dates and times to Google Servers. This data will be subject to Google's privacy policy. Your tasks are currently stored only on your device.")
+                Text(stringResource(R.string.dialog_text_google_privacy))
             },
             confirmButton = { TextButton(
                 onClick = {
@@ -123,10 +128,10 @@ fun SettingsScreen(
                         .signInIntent
                     signInLauncher.launch(signInIntent)
                 }
-            ) { Text("I understand, connect") }
+            ) { Text(stringResource(R.string.btn_i_understand_connect)) }
             },
             dismissButton = {
-                TextButton( onClick = { showPrivacyDialog = false} ) { Text("Cancel") }
+                TextButton( onClick = { showPrivacyDialog = false} ) { Text(stringResource(R.string.btn_cancel)) }
             }
         )
     }
@@ -134,12 +139,12 @@ fun SettingsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Settings") },
+                title = { Text(stringResource(R.string.title_settings)) },
                 navigationIcon = {
                     IconButton(onClick = { onNavigateBack() }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
+                            contentDescription = stringResource(R.string.cd_back)
                         )
                     }
                 }
@@ -156,7 +161,7 @@ fun SettingsScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "Color mode",
+                    text = stringResource(R.string.title_color_mode),
                     style = MaterialTheme.typography.titleMedium
                 )
                 SingleChoiceSegmentedButtonRow() { 
@@ -175,7 +180,7 @@ fun SettingsScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Dynamic color",
+                        text = stringResource(R.string.title_dynamic_color),
                         style = MaterialTheme.typography.titleMedium
                     )
                     Switch(
@@ -186,7 +191,7 @@ fun SettingsScreen(
 
                 if (!dynamicColor) {
                     Text(
-                        text = "Theme",
+                        text = stringResource(R.string.title_theme),
                         style = MaterialTheme.typography.titleMedium
                     )
                     val isDark = isSystemInDarkTheme()
@@ -205,7 +210,7 @@ fun SettingsScreen(
                 }
 
                 Text(
-                    text = "Font",
+                    text = stringResource(R.string.title_font),
                     style = MaterialTheme.typography.titleMedium
                 )
                 FlowRow(
@@ -224,7 +229,7 @@ fun SettingsScreen(
                 HorizontalDivider()
 
                 Text(
-                    text = "Sync",
+                    text = stringResource(R.string.title_sync),
                     style = MaterialTheme.typography.titleMedium
                 )
 
@@ -235,11 +240,11 @@ fun SettingsScreen(
                 ) {
                     Column {
                         Text(
-                            text = "Google Calendar",
+                            text = stringResource(R.string.label_google_calendar),
                             style = MaterialTheme.typography.bodyLarge
                         )
                         Text(
-                            text = if (isConnected) "Connected" else "Not connected",
+                            text = if (isConnected) stringResource(R.string.label_connected) else stringResource(R.string.label_not_connected),
                             style = MaterialTheme.typography.bodySmall,
                             color = if (isConnected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
                         )
@@ -255,34 +260,32 @@ fun SettingsScreen(
                             showPrivacyDialog = true
                         }
                                   },
-                        content = { Text( if (isConnected) "Disconnect" else "Connect") })
+                        content = { Text( if (isConnected) stringResource(R.string.btn_disconnect) else stringResource(R.string.btn_connect)) })
                 }
 
                 HorizontalDivider()
                 Text(
-                    text = "AI Features",
+                    text = stringResource(R.string.title_ai_features),
                     style = MaterialTheme.typography.titleMedium
                 )
 
                 if (showAiPrivacyDialog) {
                     AlertDialog(
                         onDismissRequest = { showAiPrivacyDialog = false },
-                        title = { Text("Before you enable AI features ") },
+                        title = { Text(stringResource(R.string.dialog_title_before_ai)) },
                         text = {
                             Column(
                                 verticalArrangement = Arrangement.spacedBy(4.dp)
                             ) {
-                            Text("This will download a language model (~2-3GB) to your device. " +
-                                "The model runs fully offline — your tasks never leave your phone. " +
-                                "You can disable and remove the model at any time from Settings.")
+                            Text(stringResource(R.string.dialog_text_ai_privacy))
                             HorizontalDivider()
                                 Text(
-                                    text = "Choose model",
+                                    text = stringResource(R.string.label_choose_model),
                                     style = MaterialTheme.typography.titleSmall
                                 )
                                 listOf(
-                                    Triple("E2B", "Fast · ~2GB", "Recommended for task breakdown"),
-                                    Triple("E4B", "Quality · ~3GB", "Better reasoning, uses more storage")
+                                    Triple("E2B", stringResource(R.string.model_e2b_label), stringResource(R.string.model_e2b_description)),
+                                    Triple("E4B", stringResource(R.string.model_e4b_label), stringResource(R.string.model_e4b_description))
                                 ).forEach { (variant, label, description) ->
                                     Row(
                                         modifier = Modifier
@@ -320,7 +323,7 @@ fun SettingsScreen(
                                 settingsViewModel.saveSelectedModelVariant(selectedModelVariant)
                             }
                         ) {
-                            Text("I understand, enable")
+                            Text(stringResource(R.string.btn_i_understand_enable))
                         }
                         },
                         dismissButton = {
@@ -329,7 +332,7 @@ fun SettingsScreen(
                                     showAiPrivacyDialog = false
                                 }
                             ) {
-                                Text("Cancel")
+                                Text(stringResource(R.string.btn_cancel))
                             }
                         }
                     )
@@ -342,14 +345,14 @@ fun SettingsScreen(
                 ) {
                     Column {
                         Text(
-                            text = "On-device AI",
+                            text = stringResource(R.string.label_on_device_ai),
                             style = MaterialTheme.typography.bodyLarge
                         )
                         Text(
                             text = when {
                                 aiModelReady!! -> "Ready · $aiModelVariant"
-                                    aiOptIn!! -> "Downloading model"
-                                    else -> "Not enabled"
+                                    aiOptIn!! -> stringResource(R.string.label_downloading_model)
+                                    else -> stringResource(R.string.label_not_enabled)
                             },
                             style = MaterialTheme.typography.bodySmall,
                             color = when {
@@ -370,7 +373,7 @@ fun SettingsScreen(
                             }
                         }
                     ) {
-                        Text(if (aiOptIn!!) "Disable" else "Enable")
+                        Text(if (aiOptIn!!) stringResource(R.string.btn_disable) else stringResource(R.string.btn_enable))
                     }
 
 
@@ -384,15 +387,39 @@ fun SettingsScreen(
 
                 if (aiOptIn && !aiModelReady && isDownloadWaiting) {
                     Text(
-                        text = "The model file is large, it will start downloading once you have connected to the WiFi network.",
+                        text = stringResource(R.string.msg_wifi_waiting),
                         style = MaterialTheme.typography.bodySmall
                     )
                     Button(onClick = { settingsViewModel.downloadModelOnMobileData() } ) {
                         Text(
-                            text = "Download anyway",
+                            text = stringResource(R.string.btn_download_anyway),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onPrimary
                             )
+                    }
+                }
+
+                if (aiOptIn && aiModelReady) {
+                    Text(
+                        text = stringResource(R.string.label_select_feedback_style),
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                    ) {
+                        items(FeedbackStyle.entries) { feedbackStyle ->
+                            FilterChip(
+                                selected = feedbackStyle.name.lowercase() == selectedFeedbackStyle,
+                                onClick = { settingsViewModel.saveFeedbackStyle( feedbackStyle.name.lowercase()) },
+                                label = { Text(
+                                    text = "${stringResource(feedbackStyle.emojiRes)} ${stringResource(feedbackStyle.labelRes)}",
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                )}
+                            )
+                        }
                     }
                 }
             }
@@ -424,7 +451,7 @@ private fun FontCard(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = "Aa",
+                    text = stringResource(R.string.font_preview_sample),
                     fontFamily = fontFamilyFor(font),
                     fontSize = 24.sp,
                     textAlign = TextAlign.Center

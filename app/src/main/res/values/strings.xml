@@ -26,4 +26,125 @@
     <string name="feedback_direct_label">Direct</string>
     <string name="feedback_tough_emoji">🔥</string>
     <string name="feedback_tough_label">Tough love</string>
+
+    <!-- Common / shared -->
+    <string name="cd_back">Back</string>
+    <string name="btn_cancel">Cancel</string>
+    <string name="btn_save">Save</string>
+    <string name="btn_ok">OK</string>
+    <string name="btn_clear">Clear</string>
+    <string name="btn_confirm">Confirm</string>
+
+    <!-- TaskScreen -->
+    <string name="cd_toggle_task_list">Toggle task list</string>
+    <string name="cd_filter_tasks">Filter tasks</string>
+    <string name="cd_settings">Settings</string>
+    <string name="cd_calendar_view">Calendar view</string>
+    <string name="label_calendar">Calendar</string>
+    <string name="cd_stats_view">Stats view</string>
+    <string name="label_stats">Stats</string>
+    <string name="cd_add_task">Add new task</string>
+    <string name="title_suggested_subtasks">Suggested subtasks</string>
+    <string name="btn_dismiss">Dismiss</string>
+    <string name="btn_add_all">Add all</string>
+    <string name="filter_sort_by">Sort by</string>
+    <string name="filter_category">Category</string>
+    <string name="filter_priority">Priority</string>
+    <string name="filter_duration">Duration</string>
+    <string name="btn_clear_all_filters">Clear all filters</string>
+    <string name="empty_state_no_tasks_title">Nothing here yet</string>
+    <string name="empty_state_no_tasks_subtitle">Add your first task with +</string>
+    <string name="empty_state_all_done_title">All caught up</string>
+    <string name="empty_state_all_done_subtitle">Everything\'s done. Nice work.</string>
+    <string name="empty_state_none_completed_title">Nothing completed yet</string>
+    <string name="empty_state_none_completed_subtitle">Finished tasks will appear here</string>
+
+    <!-- EditTaskScreen -->
+    <string name="title_edit_task">Edit task</string>
+    <string name="label_task_name">Task name</string>
+    <string name="label_description">Description</string>
+    <string name="label_priority">Priority</string>
+    <string name="label_duration">Duration</string>
+    <string name="label_due_date">Due date</string>
+    <string name="label_no_date_set">No date set</string>
+    <string name="title_set_time">Set time</string>
+    <string name="label_no_time_set">No time set</string>
+    <string name="label_reminder">Reminder</string>
+    <string name="label_subtasks">Subtasks</string>
+    <string name="label_new_subtask">New subtask</string>
+    <string name="cd_add_subtask">Add subtask</string>
+    <string name="cd_remove_subtask">Remove subtask</string>
+
+    <!-- StatsScreen -->
+    <string name="title_statistics">Statistics</string>
+    <string name="label_incomplete">Incomplete</string>
+    <string name="label_complete">Complete</string>
+    <string name="title_your_insights">Your insights</string>
+    <string name="msg_enable_ai_for_insights">Enable AI in Settings to see insights.</string>
+
+    <!-- TaskCard -->
+    <string name="cd_delete_task">Delete</string>
+    <string name="cd_edit_task">Edit task</string>
+    <string name="cd_breakdown_task">Break down task</string>
+    <string name="cd_complete_task">Complete task</string>
+
+    <!-- CalendarScreen -->
+    <string name="cd_previous_month">Previous month</string>
+    <string name="cd_next_month">Next month</string>
+    <string name="msg_no_tasks_this_day">No tasks this day</string>
+
+    <!-- SettingsScreen -->
+    <string name="title_settings">Settings</string>
+    <string name="title_color_mode">Color mode</string>
+    <string name="title_dynamic_color">Dynamic color</string>
+    <string name="title_theme">Theme</string>
+    <string name="title_font">Font</string>
+    <string name="title_sync">Sync</string>
+    <string name="label_google_calendar">Google Calendar</string>
+    <string name="label_connected">Connected</string>
+    <string name="label_not_connected">Not connected</string>
+    <string name="btn_connect">Connect</string>
+    <string name="btn_disconnect">Disconnect</string>
+    <string name="dialog_title_before_connect">Before you connect</string>
+    <string name="dialog_text_google_privacy">Connecting Google Calendar will send your task names, dates and times to Google Servers. This data will be subject to Google\'s privacy policy. Your tasks are currently stored only on your device.</string>
+    <string name="btn_i_understand_connect">I understand, connect</string>
+    <string name="title_ai_features">AI Features</string>
+    <string name="dialog_title_before_ai">Before you enable AI features</string>
+    <string name="dialog_text_ai_privacy">This will download a language model (~2-3GB) to your device. The model runs fully offline — your tasks never leave your phone. You can disable and remove the model at any time from Settings.</string>
+    <string name="label_choose_model">Choose model</string>
+    <string name="model_e2b_label">Fast · ~2GB</string>
+    <string name="model_e2b_description">Recommended for task breakdown</string>
+    <string name="model_e4b_label">Quality · ~3GB</string>
+    <string name="model_e4b_description">Better reasoning, uses more storage</string>
+    <string name="btn_i_understand_enable">I understand, enable</string>
+    <string name="label_on_device_ai">On-device AI</string>
+    <string name="label_downloading_model">Downloading model</string>
+    <string name="label_not_enabled">Not enabled</string>
+    <string name="btn_enable">Enable</string>
+    <string name="btn_disable">Disable</string>
+    <string name="msg_wifi_waiting">The model file is large, it will start downloading once you have connected to the WiFi network.</string>
+    <string name="btn_download_anyway">Download anyway</string>
+    <string name="label_select_feedback_style">Select feedback style</string>
+
+    <!-- OnboardingScreen -->
+    <string name="onboarding_hello">Hello</string>
+    <string name="onboarding_lets_get_started">Let\'s get you started</string>
+    <string name="onboarding_what_to_call_you">What should we call you?</string>
+    <string name="onboarding_starter_tasks_prompt">How about we start with some quick tasks?</string>
+    <string name="onboarding_notifications">Notifications</string>
+    <string name="onboarding_turn_on_notifications">Turn on notifications</string>
+    <string name="onboarding_look_and_feel">Look &amp; Feel</string>
+    <string name="onboarding_use_dynamic_color">Use dynamic color?</string>
+    <string name="onboarding_color_mode_preferences">Any color mode preferences?</string>
+    <string name="onboarding_select_theme">Select theme</string>
+    <string name="onboarding_ai_usage">AI Usage</string>
+    <string name="onboarding_wanna_use_ai">Wanna use AI?</string>
+    <string name="onboarding_get_started_btn">I\'m finished, let\'s get things done!</string>
+
+    <!-- Font preview sample -->
+    <string name="font_preview_sample">Aa</string>
+    <string name="task_attack_mode_button_desc">Task attack mode</string>
+    <string name="task_attack_button">Attack</string>
+    <string name="timeline_view_button">Timeline</string>
+    <string name="timeline_view_content_desc">Timeline View</string>
 </resources>

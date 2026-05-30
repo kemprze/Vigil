@@ -53,6 +53,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.kemprze.vigil.R
 import com.kemprze.vigil.data.DarkModePreferences
 import com.kemprze.vigil.data.model.Category
 import com.kemprze.vigil.model.tasks.TasksViewModel
@@ -181,7 +182,7 @@ fun WizardStepWelcome(
     ) {
 
         Text(
-            text = "Hello",
+            text = stringResource(R.string.onboarding_hello),
             color = MaterialTheme.colorScheme.onPrimaryContainer,
             style = MaterialTheme.typography.displayLarge
         )
@@ -189,7 +190,7 @@ fun WizardStepWelcome(
         Spacer(modifier = Modifier.height(12.dp))
 
         Text(
-            text = "Let's get you started",
+            text = stringResource(R.string.onboarding_lets_get_started),
             color = MaterialTheme.colorScheme.onPrimaryContainer,
             style = MaterialTheme.typography.headlineSmall
         )
@@ -212,7 +213,7 @@ fun WizardStepUserName(
 
 
         Text(
-            text = "What should we call you?",
+            text = stringResource(R.string.onboarding_what_to_call_you),
             color = MaterialTheme.colorScheme.onPrimaryContainer,
             style = MaterialTheme.typography.headlineSmall
         )
@@ -249,7 +250,7 @@ fun WizardStepStarterTasks(
                 .padding(start = 12.dp)
         ) {
             Text(
-                text = "How about we start with some quick tasks?",
+                text = stringResource(R.string.onboarding_starter_tasks_prompt),
                 color = MaterialTheme.colorScheme.onPrimaryContainer,
                 style = MaterialTheme.typography.titleLarge
             )
@@ -335,7 +336,7 @@ fun WizardStepQuickSettings(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "Notifications",
+            text = stringResource(R.string.onboarding_notifications),
             color = MaterialTheme.colorScheme.onPrimaryContainer,
             style = MaterialTheme.typography.titleMedium
         )
@@ -353,7 +354,7 @@ fun WizardStepQuickSettings(
         ) {
 
             Text(
-                text = "Turn on notifications",
+                text = stringResource(R.string.onboarding_turn_on_notifications),
                 color = MaterialTheme.colorScheme.onPrimaryContainer,
                 style = MaterialTheme.typography.bodyMedium
             )
@@ -375,7 +376,7 @@ fun WizardStepQuickSettings(
         )
 
         Text(
-            text = "Look & Feel",
+            text = stringResource(R.string.onboarding_look_and_feel),
             color = MaterialTheme.colorScheme.onPrimaryContainer,
             style = MaterialTheme.typography.titleMedium
         )
@@ -392,7 +393,7 @@ fun WizardStepQuickSettings(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Use dynamic color?",
+                text = stringResource(R.string.onboarding_use_dynamic_color),
                 color = MaterialTheme.colorScheme.onPrimaryContainer,
                 style = MaterialTheme.typography.bodyMedium
             )
@@ -410,7 +411,7 @@ fun WizardStepQuickSettings(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Any color mode preferences?",
+                text = stringResource(R.string.onboarding_color_mode_preferences),
                 color = MaterialTheme.colorScheme.onPrimaryContainer,
                 style = MaterialTheme.typography.bodyMedium
             )
@@ -432,7 +433,7 @@ fun WizardStepQuickSettings(
 
         if (!isDynamicColorOn) {
             Text(
-                text = "Select theme",
+                text = stringResource(R.string.onboarding_select_theme),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onPrimaryContainer
             )
@@ -462,7 +463,7 @@ fun WizardStepQuickSettings(
         )
 
         Text(
-            text = "AI Usage",
+            text = stringResource(R.string.onboarding_ai_usage),
             color = MaterialTheme.colorScheme.onPrimaryContainer,
             style = MaterialTheme.typography.titleMedium
         )
@@ -475,7 +476,7 @@ fun WizardStepQuickSettings(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Wanna use AI?",
+                text = stringResource(R.string.onboarding_wanna_use_ai),
                 color = MaterialTheme.colorScheme.onPrimaryContainer,
                 style = MaterialTheme.typography.bodyMedium
             )
@@ -489,7 +490,7 @@ fun WizardStepQuickSettings(
 
         if (isAiOptIn) {
             Text(
-                text = "Select feedback style",
+                text = stringResource(R.string.label_select_feedback_style),
                 color = MaterialTheme.colorScheme.onPrimaryContainer,
                 style = MaterialTheme.typography.bodyMedium
             )
@@ -533,7 +534,7 @@ fun WizardStepGetStarted(
             onClick = onOnboardingComplete,
         ) {
             Text(
-                text = "I'm finished, let's get things done!",
+                text = stringResource(R.string.onboarding_get_started_btn),
                 color = MaterialTheme.colorScheme.onPrimaryContainer,
                 style = MaterialTheme.typography.labelLarge
             )

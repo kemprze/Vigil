@@ -47,6 +47,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.kemprze.vigil.R
 import com.kemprze.vigil.data.model.Category
 import com.kemprze.vigil.data.model.Duration
 import com.kemprze.vigil.data.model.Priority
@@ -87,12 +88,12 @@ fun EditTaskScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Edit task") },
+                title = { Text(stringResource(R.string.title_edit_task)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
+                            contentDescription = stringResource(R.string.cd_back)
                         )
                     }
                 },
@@ -115,7 +116,7 @@ fun EditTaskScreen(
                             )
                             onNavigateBack()
                         }) {
-                        Text("Save")
+                        Text(stringResource(R.string.btn_save))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -136,19 +137,19 @@ fun EditTaskScreen(
             OutlinedTextField(
                 value = taskName,
                 onValueChange = { taskName = it},
-                label = { Text("Task name") },
+                label = { Text(stringResource(R.string.label_task_name)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
             )
             OutlinedTextField(
                 value = taskDescription,
                 onValueChange = { taskDescription = it},
-                label = { Text("Description") },
+                label = { Text(stringResource(R.string.label_description)) },
                 modifier = Modifier.fillMaxWidth(),
                 minLines = 2
             )
             Text(
-                text = "Category",
+                text = stringResource(R.string.filter_category),
                 style = MaterialTheme.typography.titleSmall,
                 color = MaterialTheme.colorScheme.primary
             )
@@ -167,7 +168,7 @@ fun EditTaskScreen(
                 }
             }
             Text(
-                text = "Priority",
+                text = stringResource(R.string.label_priority),
                 style = MaterialTheme.typography.titleSmall,
                 color = MaterialTheme.colorScheme.primary
             )
@@ -184,7 +185,7 @@ fun EditTaskScreen(
                 }
             }
             Text(
-                text = "Duration",
+                text = stringResource(R.string.label_duration),
                 style = MaterialTheme.typography.titleSmall,
                 color = MaterialTheme.colorScheme.primary
             )
@@ -201,7 +202,7 @@ fun EditTaskScreen(
                 }
             }
             Text(
-                text = "Due date",
+                text = stringResource(R.string.label_due_date),
                 style = MaterialTheme.typography.titleSmall,
                 color = MaterialTheme.colorScheme.primary
             )
@@ -221,9 +222,9 @@ fun EditTaskScreen(
                                 dueDate = pickedDate.atTime(existingTime)
                             }
                             showDatePicker = false
-                        }) { Text("OK") }
+                        }) { Text(stringResource(R.string.btn_ok)) }
                     },
-                    dismissButton = { TextButton(onClick = { showDatePicker = false }) { Text("Cancel") }
+                    dismissButton = { TextButton(onClick = { showDatePicker = false }) { Text(stringResource(R.string.btn_cancel)) }
                     }
                 ) { DatePicker(state = datePickerState )}
             }
@@ -235,7 +236,7 @@ fun EditTaskScreen(
                     imageVector = Icons.Outlined.CalendarToday,
                     contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(dueDate?.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)) ?: "No date set")
+                Text(dueDate?.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)) ?: stringResource(R.string.label_no_date_set))
             }
 
             val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -251,7 +252,7 @@ fun EditTaskScreen(
                 Text(
                     if (dueTimeHour != null && dueTimeMinute != null)
                     "%02d:%02d".format(dueTimeHour, dueTimeMinute)
-                    else "No time set"
+                    else stringResource(R.string.label_no_time_set)
                 )
             }
 
@@ -266,7 +267,7 @@ fun EditTaskScreen(
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         Text(
-                            "Set time",
+                            stringResource(R.string.title_set_time),
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.primary
                         )
@@ -283,7 +284,7 @@ fun EditTaskScreen(
                                     showTimePicker = false
                                 }
                             ) {
-                                Text("Clear")
+                                Text(stringResource(R.string.btn_clear))
                             }
                             TextButton(
                                 onClick = {
@@ -296,7 +297,7 @@ fun EditTaskScreen(
                                     showTimePicker = false
                                 }
                             ) {
-                                Text("Confirm")
+                                Text(stringResource(R.string.btn_confirm))
                             }
                         }
                     }
@@ -304,7 +305,7 @@ fun EditTaskScreen(
             }
 
             Text(
-                text = "Reminder",
+                text = stringResource(R.string.label_reminder),
                 style = MaterialTheme.typography.titleSmall,
                 color = MaterialTheme.colorScheme.primary
             )
@@ -323,7 +324,7 @@ fun EditTaskScreen(
 
             HorizontalDivider()
             Text(
-                text = "Subtasks",
+                text = stringResource(R.string.label_subtasks),
                 style = MaterialTheme.typography.titleSmall,
                 color = MaterialTheme.colorScheme.primary
             )
@@ -340,7 +341,7 @@ fun EditTaskScreen(
                 OutlinedTextField(
                     value = newSubtaskName,
                     onValueChange = { newSubtaskName = it },
-                    label = { Text("New subtask") },
+                    label = { Text(stringResource(R.string.label_new_subtask)) },
                     modifier = Modifier.weight(1f),
                     singleLine = true
                 )
@@ -352,7 +353,7 @@ fun EditTaskScreen(
                         newSubtaskName = ""
                     }
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = "Add subtask")
+                    Icon(Icons.Default.Add, contentDescription = stringResource(R.string.cd_add_subtask))
                 }
             }
 
@@ -374,7 +375,7 @@ fun EditTaskScreen(
                     ) {
                         Icon(
                             Icons.Default.Close,
-                            contentDescription = "Remove subtask"
+                            contentDescription = stringResource(R.string.cd_remove_subtask)
                             )
                     }
                 }

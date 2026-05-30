@@ -15,6 +15,7 @@ room = "2.7.0"
 ksp = "2.3.6"
 foundationLayout = "1.10.6"
 runtimeSaveable = "1.11.0"
+foundation = "1.11.2"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -40,6 +41,7 @@ room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room"}
 room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room"}
 androidx-compose-foundation-layout = { group = "androidx.compose.foundation", name = "foundation-layout", version.ref = "foundationLayout" }
 androidx-compose-runtime-saveable = { group = "androidx.compose.runtime", name = "runtime-saveable", version.ref = "runtimeSaveable" }
+androidx-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundation" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

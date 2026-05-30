@@ -1,16 +1,24 @@
 package com.kemprze.vigil.model
 
+import android.R.attr.delay
+import android.util.Log
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -26,6 +34,10 @@ import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.FilterList
 import androidx.compose.material.icons.outlined.HourglassEmpty
 import androidx.compose.material.icons.outlined.Inbox
+import androidx.compose.material.icons.outlined.Bolt
+import androidx.compose.material.icons.filled.Bolt
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.outlined.ViewDay
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -35,25 +47,32 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RenderEffect
+import androidx.compose.ui.graphics.asComposeRenderEffect
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kemprze.vigil.R
@@ -65,7 +84,8 @@ import com.kemprze.vigil.data.model.SortOrder
 import com.kemprze.vigil.data.model.Task
 import com.kemprze.vigil.model.tasks.TasksViewModel
 import com.kemprze.vigil.ui.theme.TODOPrototypingTheme
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.delay
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -86,6 +106,7 @@ fun TaskScreen(
     val isBreakingDown by tasksViewModel.isBreakingDown.collectAsState()
     val aiModelReady by tasksViewModel.aiModelReadyFlow.collectAsState(initial = false)
     val preferredName by tasksViewModel.preferredNameFlow.collectAsState(initial = "")
+    var attackModeActive by remember { mutableStateOf(false) }
 
     if (showFilterSheet) {
         ModalBottomSheet(
@@ -104,50 +125,96 @@ fun TaskScreen(
     }
     Scaffold(
         topBar = {
-            MainTaskScreenAppBar(
-                onListTypeChange = { newListType ->
-                    currentList = newListType
-                },
-                currentList = currentList,
-                preferredName = preferredName,
-                onSettingsClick = onNavigateToSettings,
-                onFilterClick = { showFilterSheet = true },
-                filterActive = taskUiState.filterState.isActive
-            )
+            if (!attackModeActive) {
+                MainTaskScreenAppBar(
+                    onListTypeChange = { newListType ->
+                        currentList = newListType
+                    },
+                    currentList = currentList,
+                    preferredName = preferredName,
+                    onSettingsClick = onNavigateToSettings,
+                    onFilterClick = { showFilterSheet = true },
+                    filterActive = taskUiState.filterState.isActive
+                )
+            }
         },
         bottomBar = {
-            MainTaskScreenBottomAppBar(
-                onAddClick = onNavigateToAddTask,
-                onCalendarClick = onCalendarClick,
-                onStatsClick = onStatsClick
-            )
+            if (!attackModeActive) {
+                MainTaskScreenBottomAppBar(
+                    onAddClick = onNavigateToAddTask,
+                    onCalendarClick = onCalendarClick,
+                    onStatsClick = onStatsClick,
+                    onAttackClick = { attackModeActive = true },
+                    onDayViewClick = { TODO() }
+                )
+            }
         }
     ) { innerPadding ->
-        TaskList(
-            currentListType = currentList,
-            incompleteTasks = taskUiState.tasks,
-            completeTasks = taskUiState.completedTasks,
-            allTasks = taskUiState.allTasks,
-            onTaskCompleted = { task, isCompleted ->
-                tasksViewModel.onTaskCompleted(
-                    task,
-                    isCompleted
+        Box(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            TaskList(
+                currentListType = currentList,
+                incompleteTasks = taskUiState.tasks,
+                completeTasks = taskUiState.completedTasks,
+                allTasks = taskUiState.allTasks,
+                onTaskCompleted = { task, isCompleted ->
+                    tasksViewModel.onTaskCompleted(
+                        task,
+                        isCompleted
+                    )
+                },
+                onTaskDeleted = { task -> tasksViewModel.onTaskDeleted(task) },
+                onEditClick = onEditClick,
+                onSubtaskCompleted = { task, isCompleted ->
+                    tasksViewModel.onTaskCompleted(
+                        task,
+                        isCompleted
+                    )
+                },
+                onBreakdownClick = { task -> tasksViewModel.breakdownTask(task) },
+                modifier = modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .then(
+                        if (attackModeActive) {
+                            Modifier.graphicsLayer {
+                                renderEffect = android.graphics.RenderEffect.createBlurEffect(
+                                    80f, 80f, android.graphics.Shader.TileMode.CLAMP
+                                ).asComposeRenderEffect()
+                            }
+                        } else Modifier
+                    ),
+                aiModelReady = aiModelReady
+            )
+
+            if (attackModeActive) {
+                val attackQueue = remember(attackModeActive) {
+                    taskUiState.tasks
+                        .filter { !it.isCompleted }
+                        .sortedByDescending {
+                            gravityScore(it)
+                        }
+                        .toMutableList()
+                }
+                var attackQueueIndex by remember { mutableIntStateOf(0) }
+                val currentAttackTask = attackQueue.getOrNull(attackQueueIndex)
+
+                AttackModeOverlay(
+                    task = currentAttackTask,
+                    onComplete = {
+                            task ->
+                        Log.d("VIGIL_ATTACK", "onComplete fired, before increment: $attackQueueIndex")
+                        tasksViewModel.onTaskCompleted(task, true)
+                        attackQueueIndex++
+                        Log.d("VIGIL_ATTACK", "after increment: $attackQueueIndex")
+                    },
+                    onSkip = { attackQueueIndex = (attackQueueIndex + 1) % attackQueue.size },
+                    onClose = { attackModeActive = false },
+                    attackQueueIndex = attackQueueIndex
                 )
-            },
-            onTaskDeleted = { task -> tasksViewModel.onTaskDeleted(task) },
-            onEditClick = onEditClick,
-            onSubtaskCompleted = { task, isCompleted ->
-                tasksViewModel.onTaskCompleted(
-                    task,
-                    isCompleted
-                )
-            },
-            onBreakdownClick = { task -> tasksViewModel.breakdownTask(task) },
-            modifier = modifier
-                .fillMaxSize()
-                .padding(innerPadding),
-            aiModelReady = aiModelReady
-        )
+            }
+        }
 
         if (suggestedSubtasks.isNotEmpty()) {
             ModalBottomSheet(
@@ -161,7 +228,7 @@ fun TaskScreen(
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     Text(
-                        text = "Suggested subtasks",
+                        text = stringResource(R.string.title_suggested_subtasks),
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -180,7 +247,7 @@ fun TaskScreen(
                                 tasksViewModel.clearSuggestedSubtasks()
                             }
                         ) {
-                            Text("Dismiss")
+                            Text(stringResource(R.string.btn_dismiss))
                         }
                         TextButton(
                             onClick = {
@@ -194,7 +261,7 @@ fun TaskScreen(
                                 tasksViewModel.clearSuggestedSubtasks()
                             }
                         ) {
-                            Text("Add all")
+                            Text(stringResource(R.string.btn_add_all))
                         }
                     }
                 }
@@ -215,10 +282,11 @@ fun MainTaskScreenAppBar(
     onSettingsClick: () -> Unit
 ) {
     TopAppBar(
-        modifier = Modifier.height(64.dp),
+        modifier = Modifier
+            .height(64.dp),
         windowInsets = WindowInsets(top = 0.dp),
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer,
+            containerColor = Color.Transparent,
             titleContentColor = MaterialTheme.colorScheme.primary,
         ),
         navigationIcon = {
@@ -231,7 +299,7 @@ fun MainTaskScreenAppBar(
             ) {
                 Icon(
                     imageVector = if (currentList == ListTypes.COMPLETE) Icons.Filled.CheckCircle else Icons.Outlined.CheckCircle,
-                    contentDescription = "Toggle task list"
+                    contentDescription = stringResource(R.string.cd_toggle_task_list)
                 )
             }
         },
@@ -254,7 +322,7 @@ fun MainTaskScreenAppBar(
             ) {
                 Icon(
                     imageVector = if (filterActive) Icons.Filled.FilterList else Icons.Outlined.FilterList,
-                    contentDescription = "Filter tasks"
+                    contentDescription = stringResource(R.string.cd_filter_tasks)
                 )
             }
             IconButton(
@@ -262,65 +330,111 @@ fun MainTaskScreenAppBar(
             ) {
                 Icon(
                     imageVector = Icons.Default.Settings,
-                    contentDescription = "Settings"
+                    contentDescription = stringResource(R.string.cd_settings)
                 )
             }
         }
     )
 }
 
+
 @Composable
 fun MainTaskScreenBottomAppBar(
     modifier: Modifier = Modifier,
     onAddClick: () -> Unit,
     onCalendarClick: () -> Unit,
-    onStatsClick: () -> Unit
+    onStatsClick: () -> Unit,
+    onAttackClick: () -> Unit,
+    onDayViewClick: () -> Unit,
 ) {
     BottomAppBar(
         actions = {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = modifier
-                    .padding(start = 8.dp)
-                    .clickable(onClick = onCalendarClick)
+            Row(
+                modifier = Modifier.weight(1f),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.Top
             ) {
-                Icon(
-                    Icons.Outlined.CalendarToday,
-                    contentDescription = "Calendar view"
-                )
-                Spacer(modifier = modifier.height(4.dp))
-                Text(
-                    text = "Calendar",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = modifier
+                        .clickable(onClick = onCalendarClick)
+                ) {
+                    Icon(
+                        Icons.Outlined.CalendarToday,
+                        contentDescription = stringResource(R.string.cd_calendar_view)
+                    )
+                    Spacer(modifier = modifier.height(4.dp))
+                    Text(
+                        text = stringResource(R.string.label_calendar),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .clickable(onClick = onStatsClick)
+                ) {
+                    Icon(
+                        Icons.Outlined.BarChart,
+                        contentDescription = stringResource(R.string.cd_stats_view)
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = stringResource(R.string.label_stats),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier
-                    .padding(start = 8.dp)
-                    .clickable(onClick = onStatsClick)
-            ) {
-                Icon(Icons.Outlined.BarChart, contentDescription = "Stats view")
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "Stats",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        },
-        modifier = modifier,
-        floatingActionButton = {
             FloatingActionButton(
                 onClick = onAddClick
             ) {
                 Icon(
                     imageVector = Icons.Default.Add,
-                    contentDescription = "Add new task"
+                    contentDescription = stringResource(R.string.cd_add_task)
                 )
             }
-        }
+            Row(
+                modifier = Modifier.weight(1f),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .clickable(onClick = onAttackClick)
+                ) {
+                    Icon(
+                        Icons.Outlined.Bolt,
+                        contentDescription = stringResource(R.string.task_attack_mode_button_desc)
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = stringResource(R.string.task_attack_button),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .clickable(onClick = onStatsClick)
+                ) {
+                    Icon(
+                        Icons.Outlined.ViewDay,
+                        contentDescription = stringResource(R.string.timeline_view_content_desc)
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = stringResource(R.string.timeline_view_button),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        },
+        modifier = modifier
     )
 }
 
@@ -346,17 +460,21 @@ fun TaskList(
     if (currentListItems.isEmpty()) {
         val (icon, title, subtitle) = when (currentListType) {
             ListTypes.INCOMPLETE -> if (completeTasks.isEmpty())
-                Triple(Icons.Outlined.Inbox, "Nothing here yet", "Add your first task with +")
+                Triple(
+                    Icons.Outlined.Inbox,
+                    stringResource(R.string.empty_state_no_tasks_title),
+                    stringResource(R.string.empty_state_no_tasks_subtitle)
+                )
             else Triple(
                 Icons.Outlined.CheckCircle,
-                "All caught up",
-                "Everything's done. Nice work."
+                stringResource(R.string.empty_state_all_done_title),
+                stringResource(R.string.empty_state_all_done_subtitle)
             )
 
             ListTypes.COMPLETE -> Triple(
                 Icons.Outlined.HourglassEmpty,
-                "Nothing completed yet",
-                "Finished tasks will appear here"
+                stringResource(R.string.empty_state_none_completed_title),
+                stringResource(R.string.empty_state_none_completed_subtitle)
             )
         }
         EmptyState(
@@ -402,7 +520,7 @@ private fun FilterSheetContent(
             .padding(16.dp)
     ) {
         Text(
-            "Sort by",
+            stringResource(R.string.filter_sort_by),
             style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.primary
         )
@@ -420,7 +538,7 @@ private fun FilterSheetContent(
 
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            "Category",
+            stringResource(R.string.filter_category),
             style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.primary
         )
@@ -443,7 +561,7 @@ private fun FilterSheetContent(
 
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            "Priority", style = MaterialTheme.typography.titleSmall,
+            stringResource(R.string.filter_priority), style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.primary
         )
         Spacer(modifier = Modifier.height(8.dp))
@@ -465,7 +583,7 @@ private fun FilterSheetContent(
 
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            "Duration", style = MaterialTheme.typography.titleSmall,
+            stringResource(R.string.filter_duration), style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.primary
         )
         Spacer(modifier = Modifier.height(8.dp))
@@ -490,7 +608,7 @@ private fun FilterSheetContent(
             onClick = { onFilterChanged(FilterState()) },
             modifier = Modifier.align(Alignment.CenterHorizontally)
         ) {
-            Text("Clear all filters")
+            Text(stringResource(R.string.btn_clear_all_filters))
         }
         Spacer(modifier = Modifier.height(16.dp))
     }
@@ -526,6 +644,125 @@ private fun EmptyState(
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.outline
         )
+    }
+}
+
+@Composable
+fun AttackModeOverlay(
+    task: Task?,
+    attackQueueIndex: Int,
+    onComplete: (Task) -> Unit,
+    onSkip: () -> Unit,
+    onClose: () -> Unit
+) {
+    var elapsedSeconds by remember {
+        mutableIntStateOf(0)
+    }
+    var offsetX by remember { mutableFloatStateOf(0f) }
+    val threshold = 300f
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(1000L)
+            elapsedSeconds++
+        }
+    }
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .clickable(
+                indication = null,
+                interactionSource = remember {
+                    MutableInteractionSource()
+                }
+            ) { }
+            .background(
+                MaterialTheme.colorScheme.surface.copy(
+                    alpha = 0.6f
+                )
+            )
+    ) {
+        val minutes = elapsedSeconds / 60
+        val seconds = elapsedSeconds % 60
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier.weight(1f)
+            ) {
+                IconButton(
+                    onClick = onClose,
+                    modifier = Modifier
+                        .padding(16.dp)
+                ) {
+                    Icon(
+                        Icons.Default.Close,
+                        contentDescription = "Exit Attack Mode"
+                    )
+                }
+            }
+            Text(
+                text = "%02d:%02d".format(minutes, seconds),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+            )
+            Spacer(
+                modifier = Modifier.weight(1f)
+            )
+        }
+        Column(
+            modifier = Modifier
+                .align(Alignment.Center)
+                .offset {
+                    IntOffset(offsetX.roundToInt(), 0)
+                }
+                .graphicsLayer { rotationZ = (offsetX / 30f).coerceIn(-15f, 15f) }
+                .pointerInput(task) {
+                    detectHorizontalDragGestures(
+                        onDragEnd = {
+                            when {
+                                offsetX > threshold -> {
+                                    task?.let {
+                                        onComplete(it)
+                                        Log.d("VIGIL_ATTACK", "Completing: ${task?.taskName}, index: $attackQueueIndex")
+                                    }
+                                offsetX = 0f
+                                }
+                                offsetX < -threshold -> {
+                                    onSkip()
+                                    offsetX = 0f
+                                }
+                                else -> offsetX = 0f
+                            }
+                        },
+                        onHorizontalDrag = { _, dragAmount -> offsetX += dragAmount}
+                    )
+                },
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            if (task == null) {
+                Text(
+                    text = "All done.",
+                    style = MaterialTheme.typography.headlineMedium,
+                )
+            } else {
+                Text(
+                    text = task?.taskName ?: "No tasks",
+                    style = MaterialTheme.typography.headlineMedium
+                )
+                Spacer(
+                    modifier = Modifier.height(4.dp)
+                )
+                Text(
+                    text = task?.taskDescription ?: "",
+                    style = MaterialTheme.typography.bodyLarge
+                )
+            }
+        }
     }
 }
 
