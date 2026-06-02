@@ -165,4 +165,12 @@
     <string name="msg_attack_all_done">All done.</string>
     <string name="msg_chart_no_tasks">No tasks</string>
     <string name="msg_chart_tasks_count">%d tasks</string>
+
+    <!-- DurationEnum -->
+    <string name="duration_quick">🕛</string>
+    <string name="duration_short">🕐</string>
+    <string name="duration_medium">🕒</string>
+    <string name="duration_long">🕕</string>
+    <string name="duration_deep_work">🕙</string>
+
 </resources>
