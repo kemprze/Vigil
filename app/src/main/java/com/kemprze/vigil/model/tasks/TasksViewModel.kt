@@ -249,7 +249,6 @@ class TasksViewModel(
     }
 
     fun breakdownTask(task: Task) {
-        android.util.Log.d("InferenceEngine", "breakdownTask called for: ${task.taskName}")
         _currentBreakdownTask.value = task
         viewModelScope.launch {
             _isBreakingDown.value = true

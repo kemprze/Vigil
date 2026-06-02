@@ -57,6 +57,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.kemprze.vigil.R
 import com.kemprze.vigil.data.model.Category
 import com.kemprze.vigil.data.model.Duration
 import com.kemprze.vigil.data.model.Priority
@@ -197,7 +198,7 @@ fun AddTaskWizard(
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back",
+                        contentDescription = stringResource(R.string.cd_back),
                         tint = MaterialTheme.colorScheme.onBackground
                     )
                 }
@@ -220,7 +221,7 @@ fun AddTaskWizard(
                         }
                     },
                         enabled = !isSubmitting) {
-                        Text("Save")
+                        Text(stringResource(R.string.btn_save))
                     }
                 }
 
@@ -247,7 +248,7 @@ fun AddTaskWizard(
                 },
                     enabled = !isSubmitting
                 ) {
-                    Text(if (pagerState.currentPage < pageCount - 1) "Next" else "Done")
+                    Text(if (pagerState.currentPage < pageCount - 1) stringResource(R.string.btn_next) else stringResource(R.string.btn_done))
                 }
             }
         }
@@ -278,7 +279,7 @@ fun WizardStepName(
             contentAlignment = Alignment.BottomEnd
         ) {
             Text(
-                text = "What do you need to do?",
+                text = stringResource(R.string.title_wizard_name_step),
                 style = MaterialTheme.typography.headlineMedium,
                 color = MaterialTheme.colorScheme.onPrimary,
                 modifier = Modifier.padding(32.dp)
@@ -298,8 +299,8 @@ fun WizardStepName(
                     onErrorCleared()
                                 },
                 isError = isError,
-                supportingText = { if (showNameError) Text("Task name cannot be left empty") },
-                label = { Text("Task name") },
+                supportingText = { if (showNameError) Text(stringResource(R.string.msg_task_name_empty)) },
+                label = { Text(stringResource(R.string.label_task_name)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
             )
@@ -312,7 +313,7 @@ fun WizardStepName(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "Autosuggest category?",
+                    text = stringResource(R.string.label_autosuggest_category),
                     color = MaterialTheme.colorScheme.onBackground,
                     style = MaterialTheme.typography.bodyLarge
                 )
@@ -343,7 +344,7 @@ fun WizardStepDetails(
         ) {
             Column(modifier = Modifier.padding(32.dp)) {
                 Text(
-                    text = "Any details?",
+                    text = stringResource(R.string.title_wizard_details_step),
                     style = MaterialTheme.typography.headlineMedium,
                     color = MaterialTheme.colorScheme.onBackground
                 )
@@ -356,7 +357,7 @@ fun WizardStepDetails(
                             onClick = { onCategorySelected(cat) },
                             label = {
                                 Text(
-                                    if (cat == Category.NONE) "🚫 None"
+                                    if (cat == Category.NONE) stringResource(R.string.label_category_none)
                                     else "${stringResource(id = cat.categoryImageRes)} ${stringResource(id = cat.categoryNameRes)}"
                                 )
                             }
@@ -376,7 +377,7 @@ fun WizardStepDetails(
             OutlinedTextField(
                 value = taskDescription,
                 onValueChange = onTaskDescriptionChange,
-                label = { Text("Description (optional)") },
+                label = { Text(stringResource(R.string.label_description_optional)) },
                 modifier = Modifier
                     .padding(32.dp)
                     .fillMaxWidth(),
@@ -441,7 +442,7 @@ fun WizardStepWhen(
             contentAlignment = Alignment.BottomStart
         ) {
             Text(
-                text = "When do you need\nto do this?",
+                text = stringResource(R.string.title_wizard_when_step),
                 style = MaterialTheme.typography.headlineLarge,
                 color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier.padding(28.dp)
@@ -483,7 +484,7 @@ fun WizardStepWhen(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "Set time",
+                    text = stringResource(R.string.title_set_time),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onPrimary
                 )
@@ -514,7 +515,7 @@ fun WizardStepWhen(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "Remind me",
+                    text = stringResource(R.string.label_remind_me),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onPrimary
                 )
@@ -582,7 +583,7 @@ fun WizardStepWhen(
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         Text(
-                            text = "Set time",
+                            text = stringResource(R.string.title_set_time),
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.primary
                         )
@@ -600,7 +601,7 @@ fun WizardStepWhen(
                                 }
                             ) {
                                 Text(
-                                    text = "Cancel"
+                                    text = stringResource(R.string.btn_cancel)
                                     // potential color issue, needs checking
                                 )
                             }
@@ -609,7 +610,7 @@ fun WizardStepWhen(
                                 showTimePicker = false
                             }) {
                                 Text(
-                                    text = "Confirm",
+                                    text = stringResource(R.string.btn_confirm),
                                     // potential color issue, needs checking
                                 )
                             }
@@ -635,7 +636,7 @@ fun WizardStepDuration(
             contentAlignment = Alignment.BottomEnd
         ) {
             Text(
-                text = "How long will\nthis take?",
+                text = stringResource(R.string.title_wizard_duration_step),
                 style = MaterialTheme.typography.headlineLarge,
                 color = MaterialTheme.colorScheme.onPrimary,
                 modifier = Modifier.padding(36.dp)
@@ -677,7 +678,7 @@ fun WizardStepImportance(
             contentAlignment = Alignment.BottomEnd
         ) {
             Text(
-                text = "How much does\nthis matter?",
+                text = stringResource(R.string.title_wizard_importance_step),
                 style = MaterialTheme.typography.headlineLarge,
                 color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier.padding(36.dp)

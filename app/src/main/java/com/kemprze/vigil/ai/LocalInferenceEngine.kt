@@ -24,7 +24,6 @@ class LocalInferenceEngine(private val context: Context) {
             if (isReady()) {
                 return@withLock
             } else {
-                android.util.Log.d("InferenceEngine", "Initializing model from $modelPath")
                 withContext(Dispatchers.IO) {
                     val gpuEngine = try {
                         Engine(
@@ -46,7 +45,6 @@ class LocalInferenceEngine(private val context: Context) {
                         )
                     ).also { it.initialize() }
                 }
-                android.util.Log.d("InferenceEngine", "Model ready!")
             }
         }
     }
@@ -62,10 +60,9 @@ class LocalInferenceEngine(private val context: Context) {
 
                 val conversationConfig = ConversationConfig(
                     systemInstruction = Contents.of(
-                        "You are a task planning assistant who provides feedback in $feedbackStyle. " +
-                                "When given a task, you break it down into short, concrete, actionable subtasks. " +
-                                "Reply with a numbered list only. " +
-                                "No explanation, no preamble."
+                        "I break tasks into concrete, actionable steps. " +
+                                "My style is $feedbackStyle. " +
+                                "I reply with a numbered list only — no preamble, no explanation."
                     ),
                     samplerConfig = SamplerConfig(topK = 40, topP = 0.95, temperature = 0.7)
                 )
@@ -139,19 +136,16 @@ class LocalInferenceEngine(private val context: Context) {
 
                 val conversationConfig = ConversationConfig(
                     systemInstruction = Contents.of(
-                        "You are a productivity assistant. " +
-                                "The user has $total tasks: $completed completed and $pending pending. " +
-                                "Their most active category is $topCategory. Give a short " +
-                                "insight in 2-3 sentences, no more. " +
-                                "If there are no tasks, give a $feedbackStyle message to get started."
+                        "I know your task list. You have $total tasks: $completed done, $pending still ahead. " +
+                                "Your most active area is $topCategory. " +
+                                "I give a short, honest read — 2-3 sentences, nothing more. " +
+                                "My style is $feedbackStyle."
                     ),
                     samplerConfig = SamplerConfig(topK = 40, topP = 0.95, temperature = 0.7)
                 )
                 var result = "NONE"
                 e.createConversation(conversationConfig).use { conversation ->
-                    val prompt = "Based on the provided data, give me my productivity insights. " +
-                            "Focus on providing objective information, but remember about being positive. " +
-                            "Make the tone feel non-judgemental and $feedbackStyle."
+                    val prompt = "What's your honest read on where things stand? Keep it short."
                     val message = conversation.sendMessage(prompt)
                     result = message.contents.toString().trim()
                 }

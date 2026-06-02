@@ -50,6 +50,7 @@ android {
 }
 
 dependencies {
+    implementation(libs.androidx.compose.ui.geometry)
     implementation(libs.androidx.core.ktx)
     implementation(platform("androidx.compose:compose-bom:2026.03.01"))
     implementation(libs.androidx.foundation)

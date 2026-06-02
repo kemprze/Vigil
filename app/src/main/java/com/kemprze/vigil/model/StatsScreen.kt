@@ -207,6 +207,8 @@ private fun DonutChart(
 ) {
     val textMeasurer = rememberTextMeasurer()
     val centerTextColor = MaterialTheme.colorScheme.onSurface
+    val centerLabel = if (total == 0) stringResource(R.string.msg_chart_no_tasks)
+                      else stringResource(R.string.msg_chart_tasks_count, total)
 
     Canvas(
         modifier = modifier.size(240.dp)
@@ -238,9 +240,8 @@ private fun DonutChart(
             }
         }
 
-        val label = if (total == 0) "No tasks" else "${total} tasks"
         val textLayout = textMeasurer.measure(
-            label, style = TextStyle(fontSize = 18.sp, color = centerTextColor)
+            centerLabel, style = TextStyle(fontSize = 18.sp, color = centerTextColor)
         )
         drawText(
             textLayoutResult = textLayout,

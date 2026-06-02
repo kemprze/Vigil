@@ -30,6 +30,7 @@ import com.kemprze.vigil.model.CalendarScreen
 import com.kemprze.vigil.model.EditTaskScreen
 import com.kemprze.vigil.model.StatsScreen
 import com.kemprze.vigil.model.TaskScreen
+import com.kemprze.vigil.model.TimelineScreen
 import com.kemprze.vigil.model.settings.OnboardingWizard
 import com.kemprze.vigil.model.settings.SettingsScreen
 import com.kemprze.vigil.model.tasks.TasksViewModel
@@ -127,6 +128,9 @@ fun AppNavigation(modifier: Modifier = Modifier,
                 onEditClick = {
                     task ->
                     navController.navigate(Screen.EditTaskScreen.createRoute(task.id))
+                },
+                onTimelineClick = {
+                    navController.navigate(Screen.TimelineScreen.route)
                 }
             )
         }
@@ -178,6 +182,12 @@ fun AppNavigation(modifier: Modifier = Modifier,
                 val taskId = backStackEntry.arguments?.getString("task_id") ?: return@composable
             EditTaskScreen(
                 taskId = taskId,
+                tasksViewModel = tasksViewModel,
+                onNavigateBack = { navController.navigateUp() }
+            )
+        }
+        composable(route = Screen.TimelineScreen.route) {
+            TimelineScreen(
                 tasksViewModel = tasksViewModel,
                 onNavigateBack = { navController.navigateUp() }
             )

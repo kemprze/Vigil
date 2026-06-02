@@ -96,7 +96,8 @@ fun TaskScreen(
     onNavigateToSettings: () -> Unit,
     onCalendarClick: () -> Unit,
     onStatsClick: () -> Unit,
-    onEditClick: (Task) -> Unit
+    onEditClick: (Task) -> Unit,
+    onTimelineClick: () -> Unit
 ) {
 
     val taskUiState by tasksViewModel.uiState.collectAsState()
@@ -145,7 +146,7 @@ fun TaskScreen(
                     onCalendarClick = onCalendarClick,
                     onStatsClick = onStatsClick,
                     onAttackClick = { attackModeActive = true },
-                    onDayViewClick = { TODO() }
+                    onTimelineClick = onTimelineClick
                 )
             }
         }
@@ -204,10 +205,8 @@ fun TaskScreen(
                     task = currentAttackTask,
                     onComplete = {
                             task ->
-                        Log.d("VIGIL_ATTACK", "onComplete fired, before increment: $attackQueueIndex")
                         tasksViewModel.onTaskCompleted(task, true)
                         attackQueueIndex++
-                        Log.d("VIGIL_ATTACK", "after increment: $attackQueueIndex")
                     },
                     onSkip = { attackQueueIndex = (attackQueueIndex + 1) % attackQueue.size },
                     onClose = { attackModeActive = false },
@@ -345,7 +344,7 @@ fun MainTaskScreenBottomAppBar(
     onCalendarClick: () -> Unit,
     onStatsClick: () -> Unit,
     onAttackClick: () -> Unit,
-    onDayViewClick: () -> Unit,
+    onTimelineClick: () -> Unit,
 ) {
     BottomAppBar(
         actions = {
@@ -419,7 +418,7 @@ fun MainTaskScreenBottomAppBar(
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier
-                        .clickable(onClick = onStatsClick)
+                        .clickable(onClick = onTimelineClick)
                 ) {
                     Icon(
                         Icons.Outlined.ViewDay,
@@ -701,7 +700,7 @@ fun AttackModeOverlay(
                 ) {
                     Icon(
                         Icons.Default.Close,
-                        contentDescription = "Exit Attack Mode"
+                        contentDescription = stringResource(R.string.cd_exit_attack_mode)
                     )
                 }
             }
@@ -728,7 +727,6 @@ fun AttackModeOverlay(
                                 offsetX > threshold -> {
                                     task?.let {
                                         onComplete(it)
-                                        Log.d("VIGIL_ATTACK", "Completing: ${task?.taskName}, index: $attackQueueIndex")
                                     }
                                 offsetX = 0f
                                 }
@@ -746,7 +744,7 @@ fun AttackModeOverlay(
         ) {
             if (task == null) {
                 Text(
-                    text = "All done.",
+                    text = stringResource(R.string.msg_attack_all_done),
                     style = MaterialTheme.typography.headlineMedium,
                 )
             } else {
@@ -775,7 +773,8 @@ fun TaskListPreview() {
             onNavigateToSettings = { },
             onCalendarClick = { },
             onStatsClick = { },
-            onEditClick = { }
+            onEditClick = { },
+            onTimelineClick = { }
         )
     }
 }
@@ -790,7 +789,8 @@ fun TaskListPreviewDark() {
             onNavigateToSettings = { },
             onCalendarClick = { },
             onStatsClick = { },
-            onEditClick = { }
+            onEditClick = { },
+            onTimelineClick = { }
         )
     }
 }

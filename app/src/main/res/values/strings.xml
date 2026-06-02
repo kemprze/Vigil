@@ -129,7 +129,7 @@
     <!-- OnboardingScreen -->
     <string name="onboarding_hello">Hello</string>
     <string name="onboarding_lets_get_started">Let\'s get you started</string>
-    <string name="onboarding_what_to_call_you">What should we call you?</string>
+    <string name="onboarding_what_to_call_you">What should I call you?</string>
     <string name="onboarding_starter_tasks_prompt">How about we start with some quick tasks?</string>
     <string name="onboarding_notifications">Notifications</string>
     <string name="onboarding_turn_on_notifications">Turn on notifications</string>
@@ -147,4 +147,22 @@
     <string name="task_attack_button">Attack</string>
     <string name="timeline_view_button">Timeline</string>
     <string name="timeline_view_content_desc">Timeline View</string>
+
+    <!-- AddTaskWizard -->
+    <string name="title_wizard_name_step">What do you need to do?</string>
+    <string name="msg_task_name_empty">Task name cannot be left empty</string>
+    <string name="label_autosuggest_category">Autosuggest category?</string>
+    <string name="title_wizard_details_step">Any details?</string>
+    <string name="label_description_optional">Description (optional)</string>
+    <string name="title_wizard_when_step">When do you need\nto do this?</string>
+    <string name="label_remind_me">Remind me</string>
+    <string name="title_wizard_duration_step">How long will\nthis take?</string>
+    <string name="title_wizard_importance_step">How much does\nthis matter?</string>
+    <string name="btn_next">Next</string>
+    <string name="btn_done">Done</string>
+    <string name="label_category_none">🚫 None</string>
+    <string name="cd_exit_attack_mode">Exit Attack Mode</string>
+    <string name="msg_attack_all_done">All done.</string>
+    <string name="msg_chart_no_tasks">No tasks</string>
+    <string name="msg_chart_tasks_count">%d tasks</string>
 </resources>
